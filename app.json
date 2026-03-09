@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "SMP MVP",
+    "slug": "smp-ios-mvp",
+    "version": "1.0.0",
+    "jsEngine": "hermes",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.smp.mvp",
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses camera for core MVP features.",
+        "NSPhotoLibraryUsageDescription": "This app uses photo library for core MVP features."
+      }
+    },
+    "android": {
+      "package": "com.smp.mvp.android"
+    },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

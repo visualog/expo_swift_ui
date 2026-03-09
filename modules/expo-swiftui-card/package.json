@@ -1,0 +1,10 @@
+{
+  "name": "expo-swiftui-card",
+  "version": "1.0.0",
+  "description": "Local Expo module exposing a SwiftUI card view for iOS.",
+  "main": "index.js",
+  "license": "MIT",
+  "author": "SMP",
+  "homepage": "https://github.com/expo/expo",
+  "private": true
+}

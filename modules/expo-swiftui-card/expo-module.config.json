@@ -1,0 +1,12 @@
+{
+  "platforms": ["apple"],
+  "apple": {
+    "modules": [
+      "ExpoSwiftUICardModule",
+      "ExpoLiquidGlassHeaderModule",
+      "ExpoLiquidGlassTabBarModule",
+      "ExpoShortcutsHomeModule"
+    ],
+    "podspecPath": "./ExpoSwiftUICard.podspec"
+  }
+}

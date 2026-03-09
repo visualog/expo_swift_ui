@@ -1,0 +1,32 @@
+{
+  "name": "smp-ios-mvp",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "preios": "node scripts/patchHermesPodspecEncoding.js",
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "prebuild:ios": "expo prebuild --platform ios --no-install",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@expo/ui": "55.0.1",
+    "expo": "~55.0.4",
+    "expo-dev-client": "~55.0.10",
+    "expo-status-bar": "~55.0.4",
+    "react": "19.2.0",
+    "react-native": "0.83.2"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "eas-cli": "^18.0.6",
+    "typescript": "~5.9.2"
+  },
+  "private": true,
+  "expo": {
+    "autolinking": {
+      "nativeModulesDir": "./modules"
+    }
+  }
+}
