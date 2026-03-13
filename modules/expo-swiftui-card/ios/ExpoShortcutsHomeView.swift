@@ -1,4 +1,5 @@
 import ExpoModulesCore
+import Combine
 import SwiftUI
 import UIKit
 
@@ -10,7 +11,7 @@ private enum RootTab: Hashable {
 
 private struct GridOverlayView: View {
   private func layoutSpec() -> (columns: Int, margin: CGFloat, gutter: CGFloat) {
-    return (columns: 4, margin: 16, gutter: 12)
+    (columns: 4, margin: 16, gutter: 12)
   }
 
   var body: some View {
@@ -41,6 +42,48 @@ private struct GridOverlayView: View {
   }
 }
 
+private final class GridOverlayStore: ObservableObject {
+  @Published var isVisible = true
+}
+
+private final class GridOverlayPassthroughWindow: UIWindow {
+  override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
+    false
+  }
+}
+
+private final class GridOverlayWindowPresenter {
+  private var window: GridOverlayPassthroughWindow?
+
+  func attach(to windowScene: UIWindowScene?) {
+    guard let windowScene else {
+      window = nil
+      return
+    }
+
+    if let window, window.windowScene === windowScene {
+      window.frame = windowScene.coordinateSpace.bounds
+      return
+    }
+
+    let overlayWindow = GridOverlayPassthroughWindow(windowScene: windowScene)
+    let controller = UIHostingController(rootView: GridOverlayView())
+    controller.view.backgroundColor = .clear
+
+    overlayWindow.rootViewController = controller
+    overlayWindow.backgroundColor = .clear
+    overlayWindow.windowLevel = .alert + 1
+    overlayWindow.isHidden = true
+    overlayWindow.frame = windowScene.coordinateSpace.bounds
+
+    window = overlayWindow
+  }
+
+  func setVisible(_ isVisible: Bool) {
+    window?.isHidden = !isVisible
+  }
+}
+
 private struct CompatibleNavigationContainer<Content: View>: View {
   @ViewBuilder let content: () -> Content
 
@@ -58,20 +101,107 @@ private struct CompatibleNavigationContainer<Content: View>: View {
   }
 }
 
-private struct MotionPresetCard: View {
-  let preset: MotionPreset
+private struct LiquidGlassLibraryBackground: View {
+  var body: some View {
+    LinearGradient(
+      colors: [
+        Color(red: 0.91, green: 0.97, blue: 1.0),
+        Color(red: 0.90, green: 0.95, blue: 0.98),
+        Color(red: 0.95, green: 0.95, blue: 1.0)
+      ],
+      startPoint: .topLeading,
+      endPoint: .bottomTrailing
+    )
+    .overlay(alignment: .topLeading) {
+      Circle()
+        .fill(Color.white.opacity(0.55))
+        .frame(width: 220, height: 220)
+        .blur(radius: 60)
+        .offset(x: -40, y: -30)
+    }
+    .overlay(alignment: .bottomTrailing) {
+      Circle()
+        .fill(Color(hex: "#6BB7FF").opacity(0.15))
+        .frame(width: 260, height: 260)
+        .blur(radius: 72)
+        .offset(x: 80, y: 120)
+    }
+    .ignoresSafeArea()
+  }
+}
+
+private struct LiquidGlassPanelModifier: ViewModifier {
+  let cornerRadius: CGFloat
+  let tint: Color?
+  let padding: CGFloat
+
+  func body(content: Content) -> some View {
+    let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+
+    content
+      .padding(padding)
+      .background {
+        if #available(iOS 26.0, *) {
+          shape
+            .fill(.clear)
+            .glassEffect(.regular, in: shape)
+            .overlay(
+              shape
+                .stroke(.white.opacity(0.42), lineWidth: 0.75)
+            )
+            .overlay {
+              if let tint {
+                shape
+                  .fill(tint.opacity(0.08))
+              }
+            }
+        } else {
+          shape
+            .fill(.ultraThinMaterial)
+            .overlay(
+              shape
+                .fill(Color.white.opacity(0.55))
+            )
+            .overlay(
+              shape
+                .stroke(.white.opacity(0.42), lineWidth: 0.75)
+            )
+            .overlay {
+              if let tint {
+                shape
+                  .fill(tint.opacity(0.08))
+              }
+            }
+        }
+      }
+      .shadow(color: .black.opacity(0.06), radius: 22, y: 10)
+  }
+}
+
+private extension View {
+  func liquidGlassPanel(
+    cornerRadius: CGFloat = 22,
+    tint: Color? = nil,
+    padding: CGFloat = 16
+  ) -> some View {
+    modifier(LiquidGlassPanelModifier(cornerRadius: cornerRadius, tint: tint, padding: padding))
+  }
+}
+
+private struct AppleDesignTopicCard: View {
+  let topic: AppleDesignTopic
   let isFavorite: Bool
   let onToggleFavorite: () -> Void
   let onSelect: () -> Void
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 10) {
-      HStack {
-        Image(systemName: preset.icon)
+    VStack(alignment: .leading, spacing: 12) {
+      HStack(alignment: .top) {
+        Image(systemName: topic.icon)
           .font(.system(size: 16, weight: .bold))
-          .foregroundStyle(Color(hex: preset.tintHex))
+          .foregroundStyle(Color(hex: topic.tintHex))
           .frame(width: 44, height: 44)
-          .background(Color(hex: preset.tintHex).opacity(0.14), in: Circle())
+          .background(Color(hex: topic.tintHex).opacity(0.14), in: Circle())
 
         Spacer()
 
@@ -85,59 +215,49 @@ private struct MotionPresetCard: View {
         .buttonStyle(.plain)
       }
 
-      Spacer(minLength: 2)
-
-      Text(preset.name)
-        .font(.system(size: 17, weight: .semibold))
+      Text(topic.koreanTitle)
+        .font(.system(size: 18, weight: .semibold))
         .foregroundStyle(.primary)
 
-      Text(preset.summary)
+      Text(topic.summary)
         .font(.system(size: 14, weight: .regular))
         .foregroundStyle(.secondary)
-        .lineLimit(2)
+        .lineLimit(3)
 
       HStack(spacing: 6) {
-        Text(preset.easing.title)
-        Text("\(Int(preset.duration * 1000))ms")
+        Text(topic.sectionTitle)
+          .lineLimit(1)
+        Text("•")
+        Text(topic.name)
+          .lineLimit(1)
       }
       .font(.system(size: 12, weight: .medium))
       .foregroundStyle(.secondary)
+
+      Text(topic.higPathTitle)
+        .font(.system(size: 12, weight: .medium))
+        .foregroundStyle(.tertiary)
+        .lineLimit(1)
     }
-    .frame(maxWidth: .infinity, minHeight: 172, alignment: .topLeading)
-    .padding(14)
-    .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-    .overlay(
-      RoundedRectangle(cornerRadius: 18, style: .continuous)
-        .stroke(Color(uiColor: .separator).opacity(0.32), lineWidth: 0.5)
-    )
+    .frame(maxWidth: .infinity, minHeight: 196, alignment: .topLeading)
+    .liquidGlassPanel(cornerRadius: 24, tint: Color(hex: topic.tintHex), padding: 14)
     .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     .onTapGesture(perform: onSelect)
   }
 }
 
-private struct MotionPresetDetailSheet: View {
-  let preset: MotionPreset
+private struct AppleDesignTopicDetailSheet: View {
+  let topic: AppleDesignTopic
   @ObservedObject var favoritesStore: FavoritesStore
 
-  @State private var duration: Double
-  @State private var delay: Double
-  @State private var easing: MotionEasing
-  @State private var intensity: MotionIntensity
-
-  init(preset: MotionPreset, favoritesStore: FavoritesStore) {
-    self.preset = preset
-    self.favoritesStore = favoritesStore
-    _duration = State(initialValue: preset.duration)
-    _delay = State(initialValue: preset.delay)
-    _easing = State(initialValue: preset.easing)
-    _intensity = State(initialValue: preset.intensity)
+  private var topicURL: URL? {
+    URL(string: topic.higUrl)
   }
 
   private var snippet: String {
     """
-    withAnimation(\(easing.rawValue), duration: \(String(format: "%.2f", duration))) {
-      // \(preset.name)
-    }
+    // \(topic.higPathTitle)
+    \(topic.swiftUIReference)
     """
   }
 
@@ -145,100 +265,127 @@ private struct MotionPresetDetailSheet: View {
     CompatibleNavigationContainer {
       ScrollView(showsIndicators: false) {
         VStack(alignment: .leading, spacing: 18) {
-          MotionPreviewView(
-            preset: preset,
-            duration: duration,
-            delay: delay,
-            easing: easing,
-            intensity: intensity
-          )
+          MotionPreviewView(topic: topic)
 
           VStack(alignment: .leading, spacing: 10) {
-            Text("파라미터")
+            Text(topic.koreanTitle)
+              .font(.system(size: 24, weight: .bold))
+              .accessibilityAddTraits(.isHeader)
+
+            Text(topic.summary)
+              .font(.system(size: 15, weight: .regular))
+              .foregroundStyle(.secondary)
+
+            metadataRow(title: "분류", value: topic.sectionTitle)
+            metadataRow(title: "HIG 경로", value: topic.higPathTitle)
+            metadataRow(title: "플랫폼 메모", value: topic.platformNotes)
+          }
+          .liquidGlassPanel(tint: Color(hex: topic.tintHex))
+
+          VStack(alignment: .leading, spacing: 12) {
+            Text("핵심 포인트")
               .font(.system(size: 20, weight: .semibold))
               .accessibilityAddTraits(.isHeader)
 
-            VStack(alignment: .leading, spacing: 8) {
-              HStack {
-                Text("Duration")
-                Spacer()
-                Text("\(Int(duration * 1000))ms")
-                  .foregroundStyle(.secondary)
-              }
-              Slider(value: $duration, in: 0.15...1.2)
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
-              HStack {
-                Text("Delay")
-                Spacer()
-                Text("\(Int(delay * 1000))ms")
-                  .foregroundStyle(.secondary)
-              }
-              Slider(value: $delay, in: 0...0.4)
-            }
-
-            Picker("Easing", selection: $easing) {
-              ForEach(MotionEasing.allCases) { item in
-                Text(item.title).tag(item)
+            ForEach(topic.keyPoints, id: \.self) { point in
+              HStack(alignment: .top, spacing: 10) {
+                Circle()
+                  .fill(Color(hex: topic.tintHex))
+                  .frame(width: 8, height: 8)
+                  .padding(.top, 6)
+                Text(point)
+                  .font(.system(size: 15, weight: .regular))
+                  .foregroundStyle(.primary)
               }
             }
-            .pickerStyle(.segmented)
-
-            Picker("Intensity", selection: $intensity) {
-              ForEach(MotionIntensity.allCases) { item in
-                Text(item.title).tag(item)
-              }
-            }
-            .pickerStyle(.segmented)
           }
-          .padding(14)
-          .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+          .liquidGlassPanel(tint: Color(hex: topic.tintHex))
 
-          VStack(alignment: .leading, spacing: 8) {
-            Text("SwiftUI Snippet")
-              .font(.system(size: 18, weight: .semibold))
+          VStack(alignment: .leading, spacing: 12) {
+            Text("SwiftUI 참고")
+              .font(.system(size: 20, weight: .semibold))
+              .accessibilityAddTraits(.isHeader)
+
+            Text(topic.swiftUIReference)
+              .font(.system(size: 15, weight: .medium))
+              .foregroundStyle(.primary)
+
             Text(snippet)
               .font(.system(.footnote, design: .monospaced))
               .frame(maxWidth: .infinity, alignment: .leading)
-              .padding(12)
-              .background(Color(uiColor: .tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+              .liquidGlassPanel(cornerRadius: 16, tint: Color(hex: topic.tintHex), padding: 12)
           }
+          .liquidGlassPanel(tint: Color(hex: topic.tintHex))
+
+          VStack(alignment: .leading, spacing: 12) {
+            Text("공식 가이드")
+              .font(.system(size: 20, weight: .semibold))
+              .accessibilityAddTraits(.isHeader)
+
+            if let topicURL {
+              Link("공식 HIG 열기", destination: topicURL)
+                .font(.system(size: 16, weight: .semibold))
+            }
+
+            Text(topic.higUrl)
+              .font(.system(size: 13, weight: .regular))
+              .foregroundStyle(.secondary)
+
+            Text(topic.isSystemDemo ? "이 장면은 시스템 화면 구조를 축약한 데모입니다." : "이 장면은 HIG 항목의 사용 맥락을 빠르게 떠올리기 위한 reference preview입니다.")
+              .font(.system(size: 13, weight: .regular))
+              .foregroundStyle(.secondary)
+          }
+          .liquidGlassPanel(tint: Color(hex: topic.tintHex))
         }
         .padding(.horizontal, 16)
         .padding(.top, 12)
         .padding(.bottom, 30)
       }
-      .background(Color(uiColor: .systemGroupedBackground))
-      .navigationTitle(preset.name)
+      .background {
+        LiquidGlassLibraryBackground()
+      }
+      .navigationTitle(topic.koreanTitle)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
-          Button(action: { favoritesStore.toggle(preset.id) }) {
-            Image(systemName: favoritesStore.isFavorite(preset.id) ? "star.fill" : "star")
+          Button(action: { favoritesStore.toggle(topic.id) }) {
+            Image(systemName: favoritesStore.isFavorite(topic.id) ? "star.fill" : "star")
           }
         }
       }
     }
   }
+
+  private func metadataRow(title: String, value: String) -> some View {
+    VStack(alignment: .leading, spacing: 4) {
+      Text(title)
+        .font(.system(size: 12, weight: .semibold))
+        .foregroundStyle(.secondary)
+      Text(value)
+        .font(.system(size: 15, weight: .regular))
+        .foregroundStyle(.primary)
+    }
+  }
 }
 
-private struct MotionLibraryHomeScreen: View {
-  let presets: [MotionPreset]
+private struct AppleDesignLibraryHomeScreen: View {
+  let topics: [AppleDesignTopic]
   @ObservedObject var favoritesStore: FavoritesStore
 
-  @State private var selectedCategory: MotionCategory = .entrance
+  @State private var selectedLibraryKind: AppleLibraryKind = .patterns
   @State private var query = ""
-  @State private var selectedPreset: MotionPreset?
+  @State private var selectedTopic: AppleDesignTopic?
 
   private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
-  private var filteredPresets: [MotionPreset] {
-    presets.filter { preset in
-      preset.category == selectedCategory &&
+  private var filteredTopics: [AppleDesignTopic] {
+    topics.filter { topic in
+      topic.libraryKind == selectedLibraryKind &&
       (query.isEmpty ||
-       preset.name.localizedCaseInsensitiveContains(query) ||
-       preset.tags.contains(where: { $0.localizedCaseInsensitiveContains(query) }))
+       topic.name.localizedCaseInsensitiveContains(query) ||
+       topic.koreanTitle.localizedCaseInsensitiveContains(query) ||
+       topic.sectionTitle.localizedCaseInsensitiveContains(query) ||
+       topic.tags.contains(where: { $0.localizedCaseInsensitiveContains(query) }))
     }
   }
 
@@ -246,58 +393,49 @@ private struct MotionLibraryHomeScreen: View {
     CompatibleNavigationContainer {
       ScrollView(showsIndicators: false) {
         VStack(alignment: .leading, spacing: 16) {
-          HStack {
-            Text("모션 라이브러리")
-              .font(.system(size: 34, weight: .bold))
-              .accessibilityAddTraits(.isHeader)
+          Text("애플 디자인 라이브러리")
+            .font(.system(size: 34, weight: .bold))
+            .accessibilityAddTraits(.isHeader)
 
-            Spacer()
-
-            Button(action: {}) {
-              Image(systemName: "plus")
-                .font(.system(size: 28, weight: .medium))
-                .foregroundStyle(.blue)
-            }
-            .buttonStyle(.plain)
-            .frame(width: 44, height: 44)
-            .contentShape(Rectangle())
-          }
+          Text("Apple Human Interface Guidelines를 기준으로 패턴과 구성요소를 빠르게 탐색하는 내부 reference 라이브러리입니다.")
+            .font(.system(size: 15, weight: .regular))
+            .foregroundStyle(.secondary)
+            .liquidGlassPanel(cornerRadius: 20, padding: 14)
 
           HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
               .foregroundStyle(.secondary)
-            TextField("모션 검색", text: $query)
+            TextField("패턴 또는 구성요소 검색", text: $query)
               .textInputAutocapitalization(.never)
               .disableAutocorrection(true)
           }
-          .padding(.horizontal, 12)
-          .padding(.vertical, 10)
-          .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+          .liquidGlassPanel(cornerRadius: 18, padding: 12)
 
-          Picker("카테고리", selection: $selectedCategory) {
-            ForEach(MotionCategory.allCases) { category in
-              Text(category.title).tag(category)
+          Picker("라이브러리 분류", selection: $selectedLibraryKind) {
+            ForEach(AppleLibraryKind.allCases) { kind in
+              Text(kind.koreanTitle).tag(kind)
             }
           }
           .pickerStyle(.segmented)
+          .liquidGlassPanel(cornerRadius: 22, padding: 8)
 
           HStack {
-            Text("프리셋")
+            Text(selectedLibraryKind == .patterns ? "패턴 주제" : "구성요소 주제")
               .font(.system(size: 28, weight: .bold))
               .accessibilityAddTraits(.isHeader)
             Spacer()
-            Text("\(filteredPresets.count)개")
+            Text("\(filteredTopics.count)개")
               .font(.system(size: 15, weight: .semibold))
               .foregroundStyle(.secondary)
           }
 
           LazyVGrid(columns: columns, spacing: 12) {
-            ForEach(filteredPresets) { preset in
-              MotionPresetCard(
-                preset: preset,
-                isFavorite: favoritesStore.isFavorite(preset.id),
-                onToggleFavorite: { favoritesStore.toggle(preset.id) },
-                onSelect: { selectedPreset = preset }
+            ForEach(filteredTopics) { topic in
+              AppleDesignTopicCard(
+                topic: topic,
+                isFavorite: favoritesStore.isFavorite(topic.id),
+                onToggleFavorite: { favoritesStore.toggle(topic.id) },
+                onSelect: { selectedTopic = topic }
               )
             }
           }
@@ -306,50 +444,56 @@ private struct MotionLibraryHomeScreen: View {
         .padding(.top, 10)
         .padding(.bottom, 22)
       }
-      .background(Color(uiColor: .systemGroupedBackground))
+      .background {
+        LiquidGlassLibraryBackground()
+      }
       .hideNavigationBarForCustomHeader()
-      .sheet(item: $selectedPreset) { preset in
-        MotionPresetDetailSheet(preset: preset, favoritesStore: favoritesStore)
+      .sheet(item: $selectedTopic) { topic in
+        AppleDesignTopicDetailSheet(topic: topic, favoritesStore: favoritesStore)
       }
     }
   }
 }
 
 private struct FavoritesScreen: View {
-  let presets: [MotionPreset]
+  let topics: [AppleDesignTopic]
   @ObservedObject var favoritesStore: FavoritesStore
 
-  @State private var selectedPreset: MotionPreset?
+  @State private var selectedTopic: AppleDesignTopic?
 
-  private var favoritePresets: [MotionPreset] {
-    presets.filter { favoritesStore.isFavorite($0.id) }
+  private var favoriteTopics: [AppleDesignTopic] {
+    topics.filter { favoritesStore.isFavorite($0.id) }
   }
 
   var body: some View {
     CompatibleNavigationContainer {
       Group {
-        if favoritePresets.isEmpty {
+        if favoriteTopics.isEmpty {
           VStack(spacing: 10) {
             Image(systemName: "star")
               .font(.system(size: 34, weight: .regular))
               .foregroundStyle(.secondary)
-            Text("즐겨찾기한 모션이 없습니다")
+            Text("저장한 라이브러리 항목이 없습니다")
               .font(.system(size: 18, weight: .semibold))
-            Text("라이브러리에서 별 버튼으로 저장해 보세요")
+            Text("라이브러리에서 별 버튼으로 topic을 저장해 보세요")
               .font(.system(size: 14, weight: .regular))
               .foregroundStyle(.secondary)
           }
           .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .background(Color(uiColor: .systemGroupedBackground))
+          .padding(.horizontal, 16)
+          .liquidGlassPanel(cornerRadius: 28)
+          .background {
+            LiquidGlassLibraryBackground()
+          }
         } else {
           ScrollView(showsIndicators: false) {
             VStack(spacing: 12) {
-              ForEach(favoritePresets) { preset in
-                MotionPresetCard(
-                  preset: preset,
-                  isFavorite: favoritesStore.isFavorite(preset.id),
-                  onToggleFavorite: { favoritesStore.toggle(preset.id) },
-                  onSelect: { selectedPreset = preset }
+              ForEach(favoriteTopics) { topic in
+                AppleDesignTopicCard(
+                  topic: topic,
+                  isFavorite: favoritesStore.isFavorite(topic.id),
+                  onToggleFavorite: { favoritesStore.toggle(topic.id) },
+                  onSelect: { selectedTopic = topic }
                 )
               }
             }
@@ -357,36 +501,64 @@ private struct FavoritesScreen: View {
             .padding(.top, 12)
             .padding(.bottom, 20)
           }
-          .background(Color(uiColor: .systemGroupedBackground))
+          .background {
+            LiquidGlassLibraryBackground()
+          }
         }
       }
       .navigationTitle("즐겨찾기")
       .navigationBarTitleDisplayMode(.large)
-      .sheet(item: $selectedPreset) { preset in
-        MotionPresetDetailSheet(preset: preset, favoritesStore: favoritesStore)
+      .sheet(item: $selectedTopic) { topic in
+        AppleDesignTopicDetailSheet(topic: topic, favoritesStore: favoritesStore)
       }
     }
   }
 }
 
 private struct SettingsScreen: View {
-  @Binding var showGridOverlay: Bool
-  @AppStorage("motion_library.default_intensity") private var defaultIntensityRaw = MotionIntensity.normal.rawValue
+  @ObservedObject var gridOverlayStore: GridOverlayStore
 
   var body: some View {
     CompatibleNavigationContainer {
-      Form {
-        Section("레이아웃") {
-          Toggle("레이아웃 그리드 표시", isOn: $showGridOverlay)
-        }
+      ScrollView(showsIndicators: false) {
+        VStack(alignment: .leading, spacing: 16) {
+          VStack(alignment: .leading, spacing: 12) {
+            Text("레이아웃")
+              .font(.system(size: 20, weight: .semibold))
+              .accessibilityAddTraits(.isHeader)
 
-        Section("모션 기본값") {
-          Picker("기본 강도", selection: $defaultIntensityRaw) {
-            ForEach(MotionIntensity.allCases) { item in
-              Text(item.title).tag(item.rawValue)
-            }
+            Toggle("레이아웃 그리드 표시", isOn: $gridOverlayStore.isVisible)
           }
+          .liquidGlassPanel()
+
+          VStack(alignment: .leading, spacing: 12) {
+            Text("라이브러리 정보")
+              .font(.system(size: 20, weight: .semibold))
+              .accessibilityAddTraits(.isHeader)
+
+            Text("이 화면은 Apple Human Interface Guidelines를 빠르게 참조하기 위한 내부 라이브러리입니다.")
+              .font(.system(size: 14, weight: .regular))
+              .foregroundStyle(.secondary)
+          }
+          .liquidGlassPanel()
+
+          VStack(alignment: .leading, spacing: 12) {
+            Text("현재 스타일")
+              .font(.system(size: 20, weight: .semibold))
+              .accessibilityAddTraits(.isHeader)
+
+            Text("iOS 26 이상에서는 Liquid Glass 계열 surface를 사용하고, 그 미만에서는 material 기반 fallback을 사용합니다.")
+              .font(.system(size: 14, weight: .regular))
+              .foregroundStyle(.secondary)
+          }
+          .liquidGlassPanel()
         }
+        .padding(.horizontal, 16)
+        .padding(.top, 16)
+        .padding(.bottom, 28)
+      }
+      .background {
+        LiquidGlassLibraryBackground()
       }
       .navigationTitle("설정")
       .navigationBarTitleDisplayMode(.large)
@@ -394,58 +566,55 @@ private struct SettingsScreen: View {
   }
 }
 
-private struct MotionLibraryRootTabView: View {
+private struct AppleDesignLibraryRootTabView: View {
   @State private var selectedTab: RootTab = .library
   @StateObject private var favoritesStore = FavoritesStore()
-  @State private var showGridOverlay = true
+  @ObservedObject var gridOverlayStore: GridOverlayStore
 
-  private let presets = MotionPreset.sampleData
+  private let topics = AppleDesignTopic.sampleData
 
   @ViewBuilder
-  var body: some View {
-    ZStack {
-      if #available(iOS 18.0, *) {
-        TabView(selection: $selectedTab) {
-          Tab("라이브러리", systemImage: "sparkles.rectangle.stack.fill", value: .library) {
-            MotionLibraryHomeScreen(presets: presets, favoritesStore: favoritesStore)
-          }
-
-          Tab("즐겨찾기", systemImage: "star.fill", value: .favorites) {
-            FavoritesScreen(presets: presets, favoritesStore: favoritesStore)
-          }
-
-          Tab("설정", systemImage: "gearshape.fill", value: .settings) {
-            SettingsScreen(showGridOverlay: $showGridOverlay)
-          }
+  private var tabContainer: some View {
+    if #available(iOS 18.0, *) {
+      TabView(selection: $selectedTab) {
+        Tab("라이브러리", systemImage: "books.vertical.fill", value: .library) {
+          AppleDesignLibraryHomeScreen(topics: topics, favoritesStore: favoritesStore)
         }
-        .tabViewStyle(.tabBarOnly)
-        .applyLiquidTabBarBehaviorIfAvailable()
-        .tint(.blue)
-      } else {
-        TabView {
-          MotionLibraryHomeScreen(presets: presets, favoritesStore: favoritesStore)
-            .tabItem {
-              Label("라이브러리", systemImage: "sparkles.rectangle.stack.fill")
-            }
 
-          FavoritesScreen(presets: presets, favoritesStore: favoritesStore)
-            .tabItem {
-              Label("즐겨찾기", systemImage: "star.fill")
-            }
-
-          SettingsScreen(showGridOverlay: $showGridOverlay)
-            .tabItem {
-              Label("설정", systemImage: "gearshape.fill")
-            }
+        Tab("즐겨찾기", systemImage: "star.fill", value: .favorites) {
+          FavoritesScreen(topics: topics, favoritesStore: favoritesStore)
         }
-        .tint(.blue)
-      }
 
-      if showGridOverlay {
-        GridOverlayView()
-          .zIndex(9_999)
+        Tab("설정", systemImage: "gearshape.fill", value: .settings) {
+          SettingsScreen(gridOverlayStore: gridOverlayStore)
+        }
       }
+      .tabViewStyle(.tabBarOnly)
+      .applyLiquidTabBarBehaviorIfAvailable()
+      .tint(.blue)
+    } else {
+      TabView {
+        AppleDesignLibraryHomeScreen(topics: topics, favoritesStore: favoritesStore)
+          .tabItem {
+            Label("라이브러리", systemImage: "books.vertical.fill")
+          }
+
+        FavoritesScreen(topics: topics, favoritesStore: favoritesStore)
+          .tabItem {
+            Label("즐겨찾기", systemImage: "star.fill")
+          }
+
+        SettingsScreen(gridOverlayStore: gridOverlayStore)
+          .tabItem {
+            Label("설정", systemImage: "gearshape.fill")
+          }
+      }
+      .tint(.blue)
     }
+  }
+
+  var body: some View {
+    tabContainer
     .onAppear { favoritesStore.load() }
   }
 }
@@ -471,13 +640,37 @@ private extension View {
 }
 
 internal final class ExpoShortcutsHomeView: ExpoView {
-  private lazy var hostingController: UIHostingController<MotionLibraryRootTabView> = {
-    UIHostingController(rootView: MotionLibraryRootTabView())
+  private let gridOverlayStore = GridOverlayStore()
+  private let gridOverlayPresenter = GridOverlayWindowPresenter()
+  private var cancellables = Set<AnyCancellable>()
+
+  private lazy var hostingController: UIHostingController<AppleDesignLibraryRootTabView> = {
+    UIHostingController(rootView: AppleDesignLibraryRootTabView(gridOverlayStore: gridOverlayStore))
   }()
 
   required init(appContext: AppContext? = nil) {
     super.init(appContext: appContext)
+    bindGridOverlay()
     setupHostedView()
+  }
+
+  override func didMoveToWindow() {
+    super.didMoveToWindow()
+    guard let windowScene = window?.windowScene else {
+      gridOverlayPresenter.attach(to: nil)
+      return
+    }
+    gridOverlayPresenter.attach(to: windowScene)
+    gridOverlayPresenter.setVisible(gridOverlayStore.isVisible)
+  }
+
+  private func bindGridOverlay() {
+    gridOverlayStore.$isVisible
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] isVisible in
+        self?.gridOverlayPresenter.setVisible(isVisible)
+      }
+      .store(in: &cancellables)
   }
 
   private func setupHostedView() {
