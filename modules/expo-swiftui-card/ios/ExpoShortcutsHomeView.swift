@@ -7,6 +7,30 @@ private enum RootTab: Hashable {
   case library
   case favorites
   case settings
+  case search
+}
+
+private enum AppleDesignSemanticTokens {
+  enum Colors {
+    static let backgroundPrimary = Color(uiColor: .systemBackground)
+    static let backgroundSecondary = Color(uiColor: .secondarySystemBackground)
+    static let backgroundTertiary = Color(uiColor: .tertiarySystemBackground)
+    static let primaryText = Color(uiColor: .label)
+    static let secondaryText = Color(uiColor: .secondaryLabel)
+    static let tertiaryText = Color(uiColor: .tertiaryLabel)
+    static let separator = Color(uiColor: .separator)
+    static let panelStroke = Color(uiColor: .separator).opacity(0.28)
+    static let subtleFill = Color(uiColor: .secondarySystemFill)
+    static let secondaryFill = Color(uiColor: .secondarySystemFill)
+    static let strongFill = Color(uiColor: .systemFill)
+  }
+
+  enum Spacing {
+    static let pageInset: CGFloat = 16
+    static let sectionGap: CGFloat = 16
+    static let compactGap: CGFloat = 12
+    static let panelPadding: CGFloat = 14
+  }
 }
 
 private struct GridOverlayView: View {
@@ -43,7 +67,7 @@ private struct GridOverlayView: View {
 }
 
 private final class GridOverlayStore: ObservableObject {
-  @Published var isVisible = true
+  @Published var isVisible = false
 }
 
 private final class GridOverlayPassthroughWindow: UIWindow {
@@ -102,26 +126,48 @@ private struct CompatibleNavigationContainer<Content: View>: View {
 }
 
 private struct LiquidGlassLibraryBackground: View {
+  @Environment(\.colorScheme) private var colorScheme
+
+  private var gradientColors: [Color] {
+    if colorScheme == .dark {
+      return [
+        Color(uiColor: .black),
+        AppleDesignSemanticTokens.Colors.backgroundPrimary,
+        AppleDesignSemanticTokens.Colors.backgroundSecondary
+      ]
+    }
+
+    return [
+      AppleDesignSemanticTokens.Colors.backgroundPrimary,
+      AppleDesignSemanticTokens.Colors.backgroundSecondary,
+      AppleDesignSemanticTokens.Colors.backgroundTertiary
+    ]
+  }
+
   var body: some View {
     LinearGradient(
-      colors: [
-        Color(red: 0.91, green: 0.97, blue: 1.0),
-        Color(red: 0.90, green: 0.95, blue: 0.98),
-        Color(red: 0.95, green: 0.95, blue: 1.0)
-      ],
+      colors: gradientColors,
       startPoint: .topLeading,
       endPoint: .bottomTrailing
     )
     .overlay(alignment: .topLeading) {
       Circle()
-        .fill(Color.white.opacity(0.55))
+        .fill(
+          colorScheme == .dark
+            ? AppleDesignSemanticTokens.Colors.primaryText.opacity(0.08)
+            : AppleDesignSemanticTokens.Colors.backgroundSecondary.opacity(0.72)
+        )
         .frame(width: 220, height: 220)
         .blur(radius: 60)
         .offset(x: -40, y: -30)
     }
     .overlay(alignment: .bottomTrailing) {
       Circle()
-        .fill(Color(hex: "#6BB7FF").opacity(0.15))
+        .fill(
+          colorScheme == .dark
+            ? Color(uiColor: .systemBlue).opacity(0.18)
+            : AppleDesignSemanticTokens.Colors.strongFill.opacity(0.52)
+        )
         .frame(width: 260, height: 260)
         .blur(radius: 72)
         .offset(x: 80, y: 120)
@@ -131,6 +177,7 @@ private struct LiquidGlassLibraryBackground: View {
 }
 
 private struct LiquidGlassPanelModifier: ViewModifier {
+  @Environment(\.colorScheme) private var colorScheme
   let cornerRadius: CGFloat
   let tint: Color?
   let padding: CGFloat
@@ -147,7 +194,7 @@ private struct LiquidGlassPanelModifier: ViewModifier {
             .glassEffect(.regular, in: shape)
             .overlay(
               shape
-                .stroke(.white.opacity(0.42), lineWidth: 0.75)
+                .stroke(AppleDesignSemanticTokens.Colors.panelStroke, lineWidth: 0.75)
             )
             .overlay {
               if let tint {
@@ -160,11 +207,15 @@ private struct LiquidGlassPanelModifier: ViewModifier {
             .fill(.ultraThinMaterial)
             .overlay(
               shape
-                .fill(Color.white.opacity(0.55))
+                .fill(
+                  colorScheme == .dark
+                    ? AppleDesignSemanticTokens.Colors.backgroundSecondary.opacity(0.92)
+                    : AppleDesignSemanticTokens.Colors.backgroundSecondary.opacity(0.78)
+                )
             )
             .overlay(
               shape
-                .stroke(.white.opacity(0.42), lineWidth: 0.75)
+                .stroke(AppleDesignSemanticTokens.Colors.panelStroke, lineWidth: 0.75)
             )
             .overlay {
               if let tint {
@@ -178,6 +229,59 @@ private struct LiquidGlassPanelModifier: ViewModifier {
   }
 }
 
+private struct LightweightLiquidPanelModifier: ViewModifier {
+  @Environment(\.colorScheme) private var colorScheme
+  let cornerRadius: CGFloat
+  let tint: Color?
+  let padding: CGFloat
+
+  func body(content: Content) -> some View {
+    let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+
+    content
+      .padding(padding)
+      .background {
+        if #available(iOS 26.0, *) {
+          shape
+            .fill(.clear)
+            .glassEffect(.regular, in: shape)
+            .overlay(
+              shape
+                .stroke(AppleDesignSemanticTokens.Colors.separator.opacity(0.22), lineWidth: 0.6)
+            )
+            .overlay {
+              if let tint {
+                shape
+                  .fill(tint.opacity(0.04))
+              }
+            }
+        } else {
+          shape
+            .fill(.thinMaterial)
+            .overlay(
+              shape
+                .fill(
+                  colorScheme == .dark
+                    ? AppleDesignSemanticTokens.Colors.backgroundSecondary.opacity(0.9)
+                    : AppleDesignSemanticTokens.Colors.backgroundTertiary.opacity(0.78)
+                )
+            )
+            .overlay(
+              shape
+                .stroke(AppleDesignSemanticTokens.Colors.separator.opacity(0.18), lineWidth: 0.6)
+            )
+            .overlay {
+              if let tint {
+                shape
+                  .fill(tint.opacity(0.04))
+              }
+            }
+        }
+      }
+      .shadow(color: .black.opacity(0.03), radius: 10, y: 4)
+  }
+}
+
 private extension View {
   func liquidGlassPanel(
     cornerRadius: CGFloat = 22,
@@ -185,6 +289,436 @@ private extension View {
     padding: CGFloat = 16
   ) -> some View {
     modifier(LiquidGlassPanelModifier(cornerRadius: cornerRadius, tint: tint, padding: padding))
+  }
+
+  func lightweightLiquidPanel(
+    cornerRadius: CGFloat = 22,
+    tint: Color? = nil,
+    padding: CGFloat = 16
+  ) -> some View {
+    modifier(LightweightLiquidPanelModifier(cornerRadius: cornerRadius, tint: tint, padding: padding))
+  }
+}
+
+private struct TopRoundedHeroShape: Shape {
+  let cornerRadius: CGFloat
+
+  func path(in rect: CGRect) -> Path {
+    Path(
+      UIBezierPath(
+        roundedRect: rect,
+        byRoundingCorners: [.topLeft, .topRight],
+        cornerRadii: CGSize(width: cornerRadius, height: cornerRadius)
+      ).cgPath
+    )
+  }
+}
+
+private struct AppleDesignTopicThumbnail: View {
+  let topic: AppleDesignTopic
+
+  private var tint: Color {
+    Color(hex: topic.tintHex)
+  }
+
+  var body: some View {
+    ZStack(alignment: .bottom) {
+      LinearGradient(
+        colors: [
+          tint.opacity(0.24),
+          AppleDesignSemanticTokens.Colors.backgroundSecondary,
+          AppleDesignSemanticTokens.Colors.backgroundTertiary
+        ],
+        startPoint: .topLeading,
+        endPoint: .bottomTrailing
+      )
+
+      thumbnailContent
+        .padding(.horizontal, 18)
+        .padding(.top, 18)
+        .padding(.bottom, 26)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+      LinearGradient(
+        colors: [
+          .clear,
+          AppleDesignSemanticTokens.Colors.backgroundSecondary.opacity(0.08),
+          AppleDesignSemanticTokens.Colors.backgroundSecondary.opacity(0.42)
+        ],
+        startPoint: .top,
+        endPoint: .bottom
+      )
+      .frame(height: 72)
+    }
+    .clipShape(TopRoundedHeroShape(cornerRadius: 24))
+    .overlay(alignment: .bottom) {
+      Rectangle()
+        .fill(AppleDesignSemanticTokens.Colors.separator.opacity(0.16))
+        .frame(height: 0.8)
+    }
+  }
+
+  @ViewBuilder
+  private var thumbnailContent: some View {
+    switch topic.previewKind {
+    case .launch:
+      launchThumbnail
+    case .loading, .progress:
+      loadingThumbnail
+    case .search:
+      searchThumbnail
+    case .modal, .share:
+      modalThumbnail
+    case .menu:
+      menuThumbnail
+    case .pageControl, .onboarding:
+      pageThumbnail
+    case .picker, .segmentedControl:
+      segmentedThumbnail
+    case .toggle:
+      toggleThumbnail
+    case .textField, .writing:
+      textFieldThumbnail
+    case .list, .collection, .image:
+      collectionThumbnail
+    default:
+      iconThumbnail
+    }
+  }
+
+  private var launchThumbnail: some View {
+    ZStack(alignment: .bottomLeading) {
+      RoundedRectangle(cornerRadius: 18, style: .continuous)
+        .fill(tint.opacity(0.08))
+        .overlay(alignment: .topLeading) {
+          VStack(alignment: .leading, spacing: 8) {
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+              .fill(tint.opacity(0.28))
+              .frame(width: 56, height: 8)
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+              .fill(AppleDesignSemanticTokens.Colors.secondaryFill)
+              .frame(width: 94, height: 8)
+          }
+          .padding(12)
+        }
+
+      RoundedRectangle(cornerRadius: 16, style: .continuous)
+        .fill(AppleDesignSemanticTokens.Colors.backgroundSecondary)
+        .frame(height: 68)
+        .overlay(alignment: .leading) {
+          RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .fill(tint.opacity(0.16))
+            .frame(width: 44)
+            .overlay(
+              Image(systemName: topic.icon)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(tint)
+            )
+            .padding(.leading, 12)
+            .padding(.vertical, 10)
+        }
+        .overlay(alignment: .topLeading) {
+          VStack(alignment: .leading, spacing: 8) {
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+              .fill(tint.opacity(0.28))
+              .frame(width: 46, height: 8)
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+              .fill(AppleDesignSemanticTokens.Colors.strongFill.opacity(0.22))
+              .frame(height: 12)
+          }
+          .padding(.leading, 68)
+          .padding(.trailing, 14)
+          .padding(.top, 14)
+        }
+    }
+  }
+
+  private var loadingThumbnail: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      RoundedRectangle(cornerRadius: 6, style: .continuous)
+        .fill(tint.opacity(0.24))
+        .frame(width: 52, height: 8)
+      RoundedRectangle(cornerRadius: 12, style: .continuous)
+        .fill(AppleDesignSemanticTokens.Colors.backgroundSecondary)
+        .frame(height: 22)
+      VStack(spacing: 8) {
+        ForEach(0..<2, id: \.self) { index in
+          RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(index == 0 ? AppleDesignSemanticTokens.Colors.backgroundSecondary : AppleDesignSemanticTokens.Colors.backgroundSecondary.opacity(0.82))
+            .frame(height: 18)
+            .overlay(alignment: .leading) {
+              RoundedRectangle(cornerRadius: 4, style: .continuous)
+                .fill(index == 0 ? tint.opacity(0.18) : AppleDesignSemanticTokens.Colors.secondaryFill)
+                .frame(width: index == 0 ? 54 : 72, height: 8)
+                .padding(.leading, 10)
+            }
+        }
+      }
+      Capsule()
+        .fill(AppleDesignSemanticTokens.Colors.secondaryFill)
+        .frame(height: 6)
+        .overlay(alignment: .leading) {
+          Capsule()
+            .fill(tint)
+            .frame(width: 56, height: 6)
+        }
+    }
+  }
+
+  private var searchThumbnail: some View {
+    VStack(spacing: 10) {
+      HStack(spacing: 8) {
+        Image(systemName: "magnifyingglass")
+          .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
+        RoundedRectangle(cornerRadius: 4, style: .continuous)
+          .fill(AppleDesignSemanticTokens.Colors.secondaryFill)
+          .frame(height: 8)
+      }
+      .padding(.horizontal, 12)
+      .frame(height: 34)
+      .background(AppleDesignSemanticTokens.Colors.backgroundSecondary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+      VStack(spacing: 8) {
+        ForEach(0..<3, id: \.self) { index in
+          HStack(spacing: 8) {
+            Circle()
+              .fill(index == 0 ? tint.opacity(0.28) : tint.opacity(0.14))
+              .frame(width: 12, height: 12)
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
+              .fill(index == 0 ? tint.opacity(0.16) : AppleDesignSemanticTokens.Colors.secondaryFill)
+              .frame(height: 8)
+          }
+          .padding(.horizontal, 10)
+          .padding(.vertical, 8)
+          .background(
+            index == 0
+              ? tint.opacity(0.08)
+              : AppleDesignSemanticTokens.Colors.backgroundSecondary.opacity(0.75),
+            in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+          )
+        }
+      }
+    }
+  }
+
+  private var modalThumbnail: some View {
+    ZStack(alignment: .bottom) {
+      RoundedRectangle(cornerRadius: 18, style: .continuous)
+        .fill(tint.opacity(0.08))
+        .overlay(alignment: .topLeading) {
+          VStack(alignment: .leading, spacing: 8) {
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+              .fill(AppleDesignSemanticTokens.Colors.secondaryFill)
+              .frame(width: 60, height: 8)
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+              .fill(AppleDesignSemanticTokens.Colors.secondaryFill.opacity(0.8))
+              .frame(width: 84, height: 8)
+          }
+          .padding(12)
+        }
+
+      RoundedRectangle(cornerRadius: 16, style: .continuous)
+        .fill(AppleDesignSemanticTokens.Colors.backgroundSecondary)
+        .frame(height: 72)
+        .overlay(alignment: .top) {
+          Capsule()
+            .fill(AppleDesignSemanticTokens.Colors.secondaryFill)
+            .frame(width: 30, height: 4)
+            .padding(.top, 8)
+        }
+        .overlay(alignment: .center) {
+          VStack(spacing: 8) {
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+              .fill(AppleDesignSemanticTokens.Colors.secondaryFill)
+              .frame(width: 86, height: 8)
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+              .fill(AppleDesignSemanticTokens.Colors.secondaryFill.opacity(0.75))
+              .frame(width: 66, height: 8)
+          }
+          .padding(.top, 10)
+        }
+    }
+  }
+
+  private var menuThumbnail: some View {
+    HStack(spacing: 12) {
+      RoundedRectangle(cornerRadius: 16, style: .continuous)
+        .fill(AppleDesignSemanticTokens.Colors.backgroundSecondary.opacity(0.78))
+        .frame(maxWidth: .infinity)
+        .overlay(alignment: .leading) {
+          HStack(spacing: 10) {
+            Circle()
+              .fill(tint.opacity(0.18))
+              .frame(width: 24, height: 24)
+            VStack(alignment: .leading, spacing: 6) {
+              RoundedRectangle(cornerRadius: 4, style: .continuous)
+                .fill(AppleDesignSemanticTokens.Colors.secondaryFill)
+                .frame(width: 44, height: 8)
+              RoundedRectangle(cornerRadius: 4, style: .continuous)
+                .fill(AppleDesignSemanticTokens.Colors.secondaryFill.opacity(0.76))
+                .frame(width: 64, height: 8)
+            }
+          }
+          .padding(.horizontal, 12)
+        }
+
+      VStack(alignment: .leading, spacing: 6) {
+        ForEach(0..<3, id: \.self) { _ in
+          HStack(spacing: 8) {
+            Circle()
+              .fill(tint.opacity(0.24))
+              .frame(width: 8, height: 8)
+            RoundedRectangle(cornerRadius: 4, style: .continuous)
+              .fill(AppleDesignSemanticTokens.Colors.secondaryFill)
+              .frame(width: 56, height: 8)
+          }
+        }
+      }
+      .padding(10)
+      .background(AppleDesignSemanticTokens.Colors.backgroundSecondary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+      .overlay(alignment: .topTrailing) {
+        Image(systemName: "ellipsis")
+          .font(.system(size: 11, weight: .bold))
+          .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
+          .padding(8)
+      }
+    }
+  }
+
+  private var pageThumbnail: some View {
+    VStack(spacing: 10) {
+      HStack(spacing: 10) {
+        ForEach(0..<2, id: \.self) { index in
+          RoundedRectangle(cornerRadius: 12, style: .continuous)
+            .fill(index == 0 ? tint.opacity(0.22) : AppleDesignSemanticTokens.Colors.backgroundSecondary)
+            .frame(height: 52)
+            .overlay(alignment: .bottomLeading) {
+              RoundedRectangle(cornerRadius: 4, style: .continuous)
+                .fill(index == 0 ? tint.opacity(0.3) : AppleDesignSemanticTokens.Colors.secondaryFill)
+                .frame(width: 28, height: 6)
+                .padding(10)
+            }
+        }
+      }
+
+      HStack(spacing: 6) {
+        ForEach(0..<3, id: \.self) { index in
+          Circle()
+            .fill(index == 1 ? tint : AppleDesignSemanticTokens.Colors.secondaryFill)
+            .frame(width: 6, height: 6)
+        }
+      }
+    }
+  }
+
+  private var segmentedThumbnail: some View {
+    VStack(spacing: 10) {
+      HStack(spacing: 0) {
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+          .fill(AppleDesignSemanticTokens.Colors.backgroundSecondary)
+          .frame(height: 30)
+          .overlay(
+            HStack(spacing: 0) {
+              RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(tint.opacity(0.22))
+              Color.clear
+              Color.clear
+            }
+            .padding(3)
+          )
+      }
+
+      HStack(spacing: 8) {
+        Circle()
+          .fill(tint.opacity(0.24))
+          .frame(width: 10, height: 10)
+        RoundedRectangle(cornerRadius: 5, style: .continuous)
+          .fill(AppleDesignSemanticTokens.Colors.secondaryFill)
+          .frame(height: 8)
+      }
+    }
+  }
+
+  private var toggleThumbnail: some View {
+    HStack {
+      VStack(alignment: .leading, spacing: 8) {
+        RoundedRectangle(cornerRadius: 5, style: .continuous)
+          .fill(AppleDesignSemanticTokens.Colors.secondaryFill)
+          .frame(width: 58, height: 8)
+        RoundedRectangle(cornerRadius: 5, style: .continuous)
+          .fill(AppleDesignSemanticTokens.Colors.secondaryFill.opacity(0.75))
+          .frame(width: 44, height: 8)
+      }
+
+      Spacer()
+
+      Capsule()
+        .fill(tint.opacity(0.32))
+        .frame(width: 42, height: 26)
+        .overlay(alignment: .trailing) {
+          Circle()
+            .fill(.white.opacity(0.92))
+            .frame(width: 20, height: 20)
+            .padding(.trailing, 3)
+        }
+    }
+    .padding(.horizontal, 12)
+    .padding(.vertical, 10)
+    .background(AppleDesignSemanticTokens.Colors.backgroundSecondary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+  }
+
+  private var textFieldThumbnail: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      RoundedRectangle(cornerRadius: 5, style: .continuous)
+        .fill(tint.opacity(0.22))
+        .frame(width: 44, height: 8)
+
+      HStack {
+        RoundedRectangle(cornerRadius: 4, style: .continuous)
+          .fill(AppleDesignSemanticTokens.Colors.secondaryFill)
+          .frame(width: 72, height: 8)
+        Rectangle()
+          .fill(tint)
+          .frame(width: 2, height: 14)
+        Spacer(minLength: 0)
+      }
+      .padding(.horizontal, 10)
+      .frame(height: 30)
+      .background(AppleDesignSemanticTokens.Colors.backgroundSecondary, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+  }
+
+  private var collectionThumbnail: some View {
+    HStack(spacing: 8) {
+      ForEach(0..<3, id: \.self) { index in
+        RoundedRectangle(cornerRadius: 12, style: .continuous)
+          .fill(index == 0 ? tint.opacity(0.24) : AppleDesignSemanticTokens.Colors.backgroundSecondary)
+          .frame(maxWidth: .infinity)
+      }
+    }
+  }
+
+  private var iconThumbnail: some View {
+    HStack(spacing: 10) {
+      Circle()
+        .fill(tint.opacity(0.16))
+        .frame(width: 42, height: 42)
+        .overlay(
+          Image(systemName: topic.icon)
+            .font(.system(size: 18, weight: .semibold))
+            .foregroundStyle(tint)
+        )
+
+      VStack(alignment: .leading, spacing: 8) {
+        RoundedRectangle(cornerRadius: 5, style: .continuous)
+          .fill(AppleDesignSemanticTokens.Colors.secondaryFill)
+          .frame(width: 54, height: 8)
+        RoundedRectangle(cornerRadius: 5, style: .continuous)
+          .fill(AppleDesignSemanticTokens.Colors.secondaryFill.opacity(0.78))
+          .frame(width: 70, height: 8)
+      }
+      Spacer(minLength: 0)
+    }
   }
 }
 
@@ -195,52 +729,39 @@ private struct AppleDesignTopicCard: View {
   let onSelect: () -> Void
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      HStack(alignment: .top) {
-        Image(systemName: topic.icon)
-          .font(.system(size: 16, weight: .bold))
-          .foregroundStyle(Color(hex: topic.tintHex))
-          .frame(width: 44, height: 44)
-          .background(Color(hex: topic.tintHex).opacity(0.14), in: Circle())
+    VStack(alignment: .leading, spacing: 0) {
+      AppleDesignTopicThumbnail(topic: topic)
+        .frame(maxWidth: .infinity)
+        .frame(height: 184)
 
-        Spacer()
+      HStack(alignment: .top, spacing: 12) {
+        VStack(alignment: .leading, spacing: 8) {
+          Text(topic.koreanTitle)
+            .font(.title3.weight(.semibold))
+            .foregroundStyle(AppleDesignSemanticTokens.Colors.primaryText)
+            .lineLimit(2)
+
+          Text(topic.usageContext)
+            .lineLimit(1)
+          .font(.subheadline)
+          .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
+        }
+
+        Spacer(minLength: 0)
 
         Button(action: onToggleFavorite) {
           Image(systemName: isFavorite ? "star.fill" : "star")
-            .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(isFavorite ? Color.yellow : Color.secondary)
-            .frame(width: 32, height: 32)
-            .background(Color(uiColor: .tertiarySystemFill), in: Circle())
+            .font(.body.weight(.semibold))
+            .foregroundStyle(isFavorite ? Color.yellow : AppleDesignSemanticTokens.Colors.secondaryText)
+            .frame(width: 44, height: 44)
+            .background(AppleDesignSemanticTokens.Colors.subtleFill, in: Circle())
         }
         .buttonStyle(.plain)
       }
-
-      Text(topic.koreanTitle)
-        .font(.system(size: 18, weight: .semibold))
-        .foregroundStyle(.primary)
-
-      Text(topic.summary)
-        .font(.system(size: 14, weight: .regular))
-        .foregroundStyle(.secondary)
-        .lineLimit(3)
-
-      HStack(spacing: 6) {
-        Text(topic.sectionTitle)
-          .lineLimit(1)
-        Text("•")
-        Text(topic.name)
-          .lineLimit(1)
-      }
-      .font(.system(size: 12, weight: .medium))
-      .foregroundStyle(.secondary)
-
-      Text(topic.higPathTitle)
-        .font(.system(size: 12, weight: .medium))
-        .foregroundStyle(.tertiary)
-        .lineLimit(1)
+      .padding(16)
     }
-    .frame(maxWidth: .infinity, minHeight: 196, alignment: .topLeading)
-    .liquidGlassPanel(cornerRadius: 24, tint: Color(hex: topic.tintHex), padding: 14)
+    .frame(maxWidth: .infinity, alignment: .topLeading)
+    .lightweightLiquidPanel(cornerRadius: 24, tint: Color(hex: topic.tintHex), padding: 0)
     .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     .onTapGesture(perform: onSelect)
   }
@@ -269,12 +790,12 @@ private struct AppleDesignTopicDetailSheet: View {
 
           VStack(alignment: .leading, spacing: 10) {
             Text(topic.koreanTitle)
-              .font(.system(size: 24, weight: .bold))
+              .font(.largeTitle)
               .accessibilityAddTraits(.isHeader)
 
             Text(topic.summary)
-              .font(.system(size: 15, weight: .regular))
-              .foregroundStyle(.secondary)
+              .font(.body)
+              .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
 
             metadataRow(title: "분류", value: topic.sectionTitle)
             metadataRow(title: "HIG 경로", value: topic.higPathTitle)
@@ -283,61 +804,63 @@ private struct AppleDesignTopicDetailSheet: View {
           .liquidGlassPanel(tint: Color(hex: topic.tintHex))
 
           VStack(alignment: .leading, spacing: 12) {
-            Text("핵심 포인트")
-              .font(.system(size: 20, weight: .semibold))
-              .accessibilityAddTraits(.isHeader)
-
-            ForEach(topic.keyPoints, id: \.self) { point in
-              HStack(alignment: .top, spacing: 10) {
-                Circle()
-                  .fill(Color(hex: topic.tintHex))
-                  .frame(width: 8, height: 8)
-                  .padding(.top, 6)
-                Text(point)
-                  .font(.system(size: 15, weight: .regular))
-                  .foregroundStyle(.primary)
+            DisclosureGroup("핵심 포인트") {
+              VStack(alignment: .leading, spacing: 12) {
+                ForEach(topic.keyPoints, id: \.self) { point in
+                  HStack(alignment: .top, spacing: 10) {
+                    Circle()
+                      .fill(Color(hex: topic.tintHex))
+                      .frame(width: 8, height: 8)
+                      .padding(.top, 6)
+                    Text(point)
+                      .font(.body)
+                      .foregroundStyle(AppleDesignSemanticTokens.Colors.primaryText)
+                  }
+                }
               }
             }
+            .font(.title3.weight(.semibold))
           }
           .liquidGlassPanel(tint: Color(hex: topic.tintHex))
 
           VStack(alignment: .leading, spacing: 12) {
-            Text("SwiftUI 참고")
-              .font(.system(size: 20, weight: .semibold))
-              .accessibilityAddTraits(.isHeader)
+            DisclosureGroup("SwiftUI 참고") {
+              VStack(alignment: .leading, spacing: 12) {
+                Text(topic.swiftUIReference)
+                  .font(.body)
+                  .foregroundStyle(AppleDesignSemanticTokens.Colors.primaryText)
 
-            Text(topic.swiftUIReference)
-              .font(.system(size: 15, weight: .medium))
-              .foregroundStyle(.primary)
-
-            Text(snippet)
-              .font(.system(.footnote, design: .monospaced))
-              .frame(maxWidth: .infinity, alignment: .leading)
-              .liquidGlassPanel(cornerRadius: 16, tint: Color(hex: topic.tintHex), padding: 12)
+                Text(snippet)
+                  .font(.system(.footnote, design: .monospaced))
+                  .frame(maxWidth: .infinity, alignment: .leading)
+                  .liquidGlassPanel(cornerRadius: 16, tint: Color(hex: topic.tintHex), padding: 12)
+              }
+            }
+            .font(.title3.weight(.semibold))
           }
           .liquidGlassPanel(tint: Color(hex: topic.tintHex))
 
           VStack(alignment: .leading, spacing: 12) {
             Text("공식 가이드")
-              .font(.system(size: 20, weight: .semibold))
+              .font(.title2)
               .accessibilityAddTraits(.isHeader)
 
             if let topicURL {
               Link("공식 HIG 열기", destination: topicURL)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.headline)
             }
 
             Text(topic.higUrl)
-              .font(.system(size: 13, weight: .regular))
-              .foregroundStyle(.secondary)
+              .font(.footnote)
+              .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
 
             Text(topic.isSystemDemo ? "이 장면은 시스템 화면 구조를 축약한 데모입니다." : "이 장면은 HIG 항목의 사용 맥락을 빠르게 떠올리기 위한 reference preview입니다.")
-              .font(.system(size: 13, weight: .regular))
-              .foregroundStyle(.secondary)
+              .font(.footnote)
+              .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
           }
           .liquidGlassPanel(tint: Color(hex: topic.tintHex))
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, AppleDesignSemanticTokens.Spacing.pageInset)
         .padding(.top, 12)
         .padding(.bottom, 30)
       }
@@ -359,11 +882,11 @@ private struct AppleDesignTopicDetailSheet: View {
   private func metadataRow(title: String, value: String) -> some View {
     VStack(alignment: .leading, spacing: 4) {
       Text(title)
-        .font(.system(size: 12, weight: .semibold))
-        .foregroundStyle(.secondary)
+        .font(.caption)
+        .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
       Text(value)
-        .font(.system(size: 15, weight: .regular))
-        .foregroundStyle(.primary)
+        .font(.body)
+        .foregroundStyle(AppleDesignSemanticTokens.Colors.primaryText)
     }
   }
 }
@@ -373,63 +896,34 @@ private struct AppleDesignLibraryHomeScreen: View {
   @ObservedObject var favoritesStore: FavoritesStore
 
   @State private var selectedLibraryKind: AppleLibraryKind = .patterns
-  @State private var query = ""
   @State private var selectedTopic: AppleDesignTopic?
 
-  private let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
-
   private var filteredTopics: [AppleDesignTopic] {
-    topics.filter { topic in
-      topic.libraryKind == selectedLibraryKind &&
-      (query.isEmpty ||
-       topic.name.localizedCaseInsensitiveContains(query) ||
-       topic.koreanTitle.localizedCaseInsensitiveContains(query) ||
-       topic.sectionTitle.localizedCaseInsensitiveContains(query) ||
-       topic.tags.contains(where: { $0.localizedCaseInsensitiveContains(query) }))
-    }
+    topics.filter { $0.libraryKind == selectedLibraryKind }
   }
 
   var body: some View {
     CompatibleNavigationContainer {
       ScrollView(showsIndicators: false) {
-        VStack(alignment: .leading, spacing: 16) {
-          Text("애플 디자인 라이브러리")
-            .font(.system(size: 34, weight: .bold))
-            .accessibilityAddTraits(.isHeader)
-
-          Text("Apple Human Interface Guidelines를 기준으로 패턴과 구성요소를 빠르게 탐색하는 내부 reference 라이브러리입니다.")
-            .font(.system(size: 15, weight: .regular))
-            .foregroundStyle(.secondary)
-            .liquidGlassPanel(cornerRadius: 20, padding: 14)
-
-          HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass")
-              .foregroundStyle(.secondary)
-            TextField("패턴 또는 구성요소 검색", text: $query)
-              .textInputAutocapitalization(.never)
-              .disableAutocorrection(true)
-          }
-          .liquidGlassPanel(cornerRadius: 18, padding: 12)
-
+        VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.sectionGap) {
           Picker("라이브러리 분류", selection: $selectedLibraryKind) {
             ForEach(AppleLibraryKind.allCases) { kind in
               Text(kind.koreanTitle).tag(kind)
             }
           }
           .pickerStyle(.segmented)
-          .liquidGlassPanel(cornerRadius: 22, padding: 8)
 
           HStack {
-            Text(selectedLibraryKind == .patterns ? "패턴 주제" : "구성요소 주제")
-              .font(.system(size: 28, weight: .bold))
+            Text(selectedLibraryKind == .patterns ? "실제 화면 패턴" : "실제 UI 구성요소")
+              .font(.title2)
               .accessibilityAddTraits(.isHeader)
             Spacer()
             Text("\(filteredTopics.count)개")
-              .font(.system(size: 15, weight: .semibold))
-              .foregroundStyle(.secondary)
+              .font(.footnote)
+              .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
           }
 
-          LazyVGrid(columns: columns, spacing: 12) {
+          LazyVStack(spacing: 12) {
             ForEach(filteredTopics) { topic in
               AppleDesignTopicCard(
                 topic: topic,
@@ -440,17 +934,99 @@ private struct AppleDesignLibraryHomeScreen: View {
             }
           }
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, AppleDesignSemanticTokens.Spacing.pageInset)
         .padding(.top, 10)
         .padding(.bottom, 22)
       }
       .background {
         LiquidGlassLibraryBackground()
       }
-      .hideNavigationBarForCustomHeader()
+      .navigationTitle("Apple HIG 레퍼런스")
+      .navigationBarTitleDisplayMode(.large)
       .sheet(item: $selectedTopic) { topic in
         AppleDesignTopicDetailSheet(topic: topic, favoritesStore: favoritesStore)
       }
+    }
+  }
+}
+
+private struct SearchScreen: View {
+  let topics: [AppleDesignTopic]
+  @ObservedObject var favoritesStore: FavoritesStore
+  @Binding var searchQuery: String
+
+  @State private var selectedTopic: AppleDesignTopic?
+
+  private var filteredTopics: [AppleDesignTopic] {
+    let normalizedQuery = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !normalizedQuery.isEmpty else {
+      return topics
+    }
+
+    return topics.filter { topic in
+      topic.name.localizedCaseInsensitiveContains(normalizedQuery) ||
+      topic.koreanTitle.localizedCaseInsensitiveContains(normalizedQuery) ||
+      topic.usageContext.localizedCaseInsensitiveContains(normalizedQuery) ||
+      topic.sectionTitle.localizedCaseInsensitiveContains(normalizedQuery) ||
+      topic.higPathTitle.localizedCaseInsensitiveContains(normalizedQuery) ||
+      topic.tags.contains(where: { $0.localizedCaseInsensitiveContains(normalizedQuery) })
+    }
+  }
+
+  var body: some View {
+    CompatibleNavigationContainer {
+      ScrollView(showsIndicators: false) {
+        VStack(alignment: .leading, spacing: 16) {
+          HStack {
+            Text(searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "전체 항목" : "검색 결과")
+              .font(.title2)
+              .accessibilityAddTraits(.isHeader)
+            Spacer()
+            Text("\(filteredTopics.count)개")
+              .font(.footnote)
+              .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
+          }
+
+          if filteredTopics.isEmpty {
+            VStack(spacing: 10) {
+              Image(systemName: "magnifyingglass")
+                .font(.title)
+                .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
+              Text("검색 결과가 없습니다")
+                .font(.headline)
+              Text("다른 키워드나 HIG 항목 이름으로 다시 찾아보세요.")
+                .font(.body)
+                .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
+                .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .lightweightLiquidPanel(cornerRadius: 24, padding: 20)
+          } else {
+            LazyVStack(spacing: 12) {
+              ForEach(filteredTopics) { topic in
+                AppleDesignTopicCard(
+                  topic: topic,
+                  isFavorite: favoritesStore.isFavorite(topic.id),
+                  onToggleFavorite: { favoritesStore.toggle(topic.id) },
+                  onSelect: { selectedTopic = topic }
+                )
+              }
+            }
+          }
+        }
+        .padding(.horizontal, AppleDesignSemanticTokens.Spacing.pageInset)
+        .padding(.top, 10)
+        .padding(.bottom, 22)
+      }
+      .background {
+        LiquidGlassLibraryBackground()
+      }
+      .navigationTitle("검색")
+      .navigationBarTitleDisplayMode(.inline)
+      .sheet(item: $selectedTopic) { topic in
+        AppleDesignTopicDetailSheet(topic: topic, favoritesStore: favoritesStore)
+      }
+      .searchable(text: $searchQuery, prompt: "패턴 또는 구성요소 검색")
     }
   }
 }
@@ -471,13 +1047,13 @@ private struct FavoritesScreen: View {
         if favoriteTopics.isEmpty {
           VStack(spacing: 10) {
             Image(systemName: "star")
-              .font(.system(size: 34, weight: .regular))
-              .foregroundStyle(.secondary)
+              .font(.largeTitle)
+              .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
             Text("저장한 라이브러리 항목이 없습니다")
-              .font(.system(size: 18, weight: .semibold))
+              .font(.headline)
             Text("라이브러리에서 별 버튼으로 topic을 저장해 보세요")
-              .font(.system(size: 14, weight: .regular))
-              .foregroundStyle(.secondary)
+              .font(.body)
+              .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
           }
           .frame(maxWidth: .infinity, maxHeight: .infinity)
           .padding(.horizontal, 16)
@@ -524,7 +1100,7 @@ private struct SettingsScreen: View {
         VStack(alignment: .leading, spacing: 16) {
           VStack(alignment: .leading, spacing: 12) {
             Text("레이아웃")
-              .font(.system(size: 20, weight: .semibold))
+              .font(.title3)
               .accessibilityAddTraits(.isHeader)
 
             Toggle("레이아웃 그리드 표시", isOn: $gridOverlayStore.isVisible)
@@ -533,23 +1109,23 @@ private struct SettingsScreen: View {
 
           VStack(alignment: .leading, spacing: 12) {
             Text("라이브러리 정보")
-              .font(.system(size: 20, weight: .semibold))
+              .font(.title3)
               .accessibilityAddTraits(.isHeader)
 
             Text("이 화면은 Apple Human Interface Guidelines를 빠르게 참조하기 위한 내부 라이브러리입니다.")
-              .font(.system(size: 14, weight: .regular))
-              .foregroundStyle(.secondary)
+              .font(.body)
+              .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
           }
           .liquidGlassPanel()
 
           VStack(alignment: .leading, spacing: 12) {
             Text("현재 스타일")
-              .font(.system(size: 20, weight: .semibold))
+              .font(.title3)
               .accessibilityAddTraits(.isHeader)
 
             Text("iOS 26 이상에서는 Liquid Glass 계열 surface를 사용하고, 그 미만에서는 material 기반 fallback을 사용합니다.")
-              .font(.system(size: 14, weight: .regular))
-              .foregroundStyle(.secondary)
+              .font(.body)
+              .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
           }
           .liquidGlassPanel()
         }
@@ -568,6 +1144,7 @@ private struct SettingsScreen: View {
 
 private struct AppleDesignLibraryRootTabView: View {
   @State private var selectedTab: RootTab = .library
+  @State private var searchQuery = ""
   @StateObject private var favoritesStore = FavoritesStore()
   @ObservedObject var gridOverlayStore: GridOverlayStore
 
@@ -587,6 +1164,14 @@ private struct AppleDesignLibraryRootTabView: View {
 
         Tab("설정", systemImage: "gearshape.fill", value: .settings) {
           SettingsScreen(gridOverlayStore: gridOverlayStore)
+        }
+
+        Tab("검색", systemImage: "magnifyingglass", value: .search, role: .search) {
+          SearchScreen(
+            topics: topics,
+            favoritesStore: favoritesStore,
+            searchQuery: $searchQuery
+          )
         }
       }
       .tabViewStyle(.tabBarOnly)
@@ -608,6 +1193,15 @@ private struct AppleDesignLibraryRootTabView: View {
           .tabItem {
             Label("설정", systemImage: "gearshape.fill")
           }
+
+        SearchScreen(
+          topics: topics,
+          favoritesStore: favoritesStore,
+          searchQuery: $searchQuery
+        )
+          .tabItem {
+            Label("검색", systemImage: "magnifyingglass")
+          }
       }
       .tint(.blue)
     }
@@ -615,7 +1209,7 @@ private struct AppleDesignLibraryRootTabView: View {
 
   var body: some View {
     tabContainer
-    .onAppear { favoritesStore.load() }
+      .onAppear { favoritesStore.load() }
   }
 }
 

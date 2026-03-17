@@ -8,6 +8,7 @@ test('grid overlay is promoted above sheets via a window-level presenter', () =>
   const source = fs.readFileSync(homeViewPath, 'utf8');
 
   assert.match(source, /private final class GridOverlayStore: ObservableObject/);
+  assert.match(source, /@Published var isVisible = false/);
   assert.match(source, /private final class GridOverlayWindowPresenter/);
   assert.match(source, /private final class GridOverlayPassthroughWindow: UIWindow/);
   assert.match(source, /override func didMoveToWindow\(\)/);
@@ -21,4 +22,5 @@ test('root tab body wraps its availability branches so lifecycle modifiers attac
 
   assert.match(source, /private var tabContainer: some View/);
   assert.match(source, /tabContainer\s*\.onAppear \{ favoritesStore\.load\(\) \}/);
+  assert.match(source, /SearchScreen[\s\S]*?\.searchable\(text:\s*\$searchQuery, prompt:\s*"패턴 또는 구성요소 검색"\)/);
 });

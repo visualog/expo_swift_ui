@@ -46,15 +46,37 @@ test('home and detail surfaces expose HIG metadata instead of motion tuning cont
   const previewSource = fs.readFileSync(previewPath, 'utf8');
   const catalogSource = fs.readFileSync(catalogPath, 'utf8');
 
-  assert.match(homeSource, /Text\("핵심 포인트"\)/);
-  assert.match(homeSource, /Text\("SwiftUI 참고"\)/);
+  assert.match(homeSource, /DisclosureGroup\("핵심 포인트"/);
+  assert.match(homeSource, /DisclosureGroup\("SwiftUI 참고"/);
   assert.match(homeSource, /Link\("공식 HIG 열기"/);
   assert.match(homeSource, /topic\.higUrl/);
   assert.match(homeSource, /topic\.sectionTitle/);
   assert.match(homeSource, /topic\.swiftUIReference/);
+  assert.match(catalogSource, /let cardSummary: String/);
   assert.doesNotMatch(homeSource, /Text\("파라미터"\)/);
   assert.doesNotMatch(homeSource, /Slider\(value: \$duration/);
   assert.doesNotMatch(homeSource, /Picker\("Easing"/);
   assert.doesNotMatch(previewSource, /duration: Double/);
   assert.match(catalogSource, /let keyPoints: \[String\]/);
+});
+
+test('preview scenes use semantic preview tokens instead of fixed white surfaces and repeated fixed caption sizes', () => {
+  const source = fs.readFileSync(previewPath, 'utf8');
+
+  assert.match(source, /private enum AppleDesignPreviewTokens/);
+  assert.match(source, /Color\(uiColor:\s*\.secondarySystemBackground\)/);
+  assert.match(source, /Color\(uiColor:\s*\.label\)/);
+  assert.match(source, /Color\(uiColor:\s*\.secondaryLabel\)/);
+  assert.match(source, /font\(\.footnote\)/);
+  assert.match(source, /font\(\.headline\)/);
+  assert.doesNotMatch(source, /\.font\(\.system\(size:\s*12,\s*weight:\s*\.medium\)\)/);
+});
+
+test('detail preview hero is sized as primary content and the helper hint is visually secondary', () => {
+  const source = fs.readFileSync(previewPath, 'utf8');
+
+  assert.match(source, /\.frame\(height:\s*320\)/);
+  assert.match(source, /Text\(interactionHint\)/);
+  assert.match(source, /\.font\(\.caption\)/);
+  assert.doesNotMatch(source, /\.font\(\.footnote\)\s*[\r\n]+\s*\.foregroundStyle\(AppleDesignPreviewTokens\.secondaryText\)\s*[\r\n]+\s*\.padding\(\.horizontal,\s*4\)/);
 });

@@ -1,5 +1,16 @@
 import SwiftUI
 
+private enum AppleDesignPreviewTokens {
+  static let primaryText = Color(uiColor: .label)
+  static let secondaryText = Color(uiColor: .secondaryLabel)
+  static let tertiaryText = Color(uiColor: .tertiaryLabel)
+  static let primarySurface = Color(uiColor: .secondarySystemBackground)
+  static let secondarySurface = Color(uiColor: .tertiarySystemBackground)
+  static let fill = Color(uiColor: .systemFill)
+  static let secondaryFill = Color(uiColor: .secondarySystemFill)
+  static let separator = Color(uiColor: .separator)
+}
+
 struct MotionPreviewView: View {
   let topic: AppleDesignTopic
 
@@ -28,12 +39,12 @@ struct MotionPreviewView: View {
           .padding(18)
           .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
-      .frame(height: 264)
+      .frame(height: 320)
 
       Text(interactionHint)
-        .font(.system(size: 12, weight: .medium))
-        .foregroundStyle(.secondary)
-        .padding(.horizontal, 4)
+        .font(.caption)
+        .foregroundStyle(AppleDesignPreviewTokens.tertiaryText)
+        .padding(.horizontal, 2)
     }
     .onAppear(perform: resetScene)
   }
@@ -107,9 +118,9 @@ struct MotionPreviewView: View {
     return ZStack {
       LinearGradient(
         colors: [
-          sceneTint.opacity(0.16),
-          sceneTint.opacity(0.07),
-          Color.white.opacity(0.72)
+          sceneTint.opacity(0.14),
+          AppleDesignPreviewTokens.primarySurface,
+          AppleDesignPreviewTokens.secondarySurface
         ],
         startPoint: .topLeading,
         endPoint: .bottomTrailing
@@ -127,7 +138,7 @@ struct MotionPreviewView: View {
     .clipShape(shape)
     .overlay(
       shape
-        .stroke(.white.opacity(0.44), lineWidth: 0.8)
+        .stroke(AppleDesignPreviewTokens.separator.opacity(0.28), lineWidth: 0.8)
     )
     .shadow(color: .black.opacity(0.08), radius: 24, y: 10)
   }
@@ -182,7 +193,8 @@ struct MotionPreviewView: View {
             .font(.system(size: 32, weight: .semibold))
             .foregroundStyle(sceneTint)
           Text("Tap to Launch")
-            .font(.system(size: 16, weight: .semibold))
+            .font(.headline)
+            .foregroundStyle(AppleDesignPreviewTokens.primaryText)
         }
         .transition(.opacity.combined(with: .scale(scale: 1.04)))
       }
@@ -197,7 +209,8 @@ struct MotionPreviewView: View {
     VStack(alignment: .leading, spacing: 14) {
       HStack {
         Text(loadingComplete ? "Loaded" : "Loading")
-          .font(.system(size: 14, weight: .semibold))
+          .font(.headline)
+          .foregroundStyle(AppleDesignPreviewTokens.primaryText)
         Spacer()
         Button(loadingComplete ? "Reset" : "Complete") {
           withAnimation(.easeInOut(duration: 0.25)) {
@@ -208,7 +221,7 @@ struct MotionPreviewView: View {
       }
 
       RoundedRectangle(cornerRadius: 18, style: .continuous)
-        .fill(.white.opacity(0.62))
+        .fill(AppleDesignPreviewTokens.primarySurface.opacity(0.88))
         .frame(height: 96)
         .overlay(alignment: .topLeading) {
           VStack(alignment: .leading, spacing: 10) {
@@ -216,7 +229,7 @@ struct MotionPreviewView: View {
               .fill(sceneTint.opacity(0.22))
               .frame(width: loadingComplete ? 116 : 86, height: 11)
             RoundedRectangle(cornerRadius: 5, style: .continuous)
-              .fill(Color.white.opacity(loadingComplete ? 0.9 : 0.48))
+              .fill(loadingComplete ? AppleDesignPreviewTokens.primarySurface : AppleDesignPreviewTokens.fill)
               .frame(height: 10)
             ProgressView(value: loadingComplete ? 1.0 : 0.34)
               .tint(sceneTint)
@@ -229,16 +242,16 @@ struct MotionPreviewView: View {
           Image(systemName: "checkmark.circle.fill")
             .foregroundStyle(sceneTint)
           Text("콘텐츠가 준비되어 실제 화면으로 전환됩니다.")
-            .font(.system(size: 13, weight: .medium))
-            .foregroundStyle(.secondary)
+            .font(.footnote)
+            .foregroundStyle(AppleDesignPreviewTokens.secondaryText)
         }
       } else {
         HStack(spacing: 10) {
           ProgressView()
             .tint(sceneTint)
           Text("콘텐츠 준비 중")
-            .font(.system(size: 13, weight: .medium))
-            .foregroundStyle(.secondary)
+            .font(.footnote)
+            .foregroundStyle(AppleDesignPreviewTokens.secondaryText)
         }
       }
     }
@@ -256,7 +269,7 @@ struct MotionPreviewView: View {
       }
       .padding(.horizontal, 12)
       .frame(height: 42)
-      .background(.white.opacity(0.52), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+      .background(AppleDesignPreviewTokens.primarySurface.opacity(0.88), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
       .overlay(
         RoundedRectangle(cornerRadius: 14, style: .continuous)
           .stroke(sceneTint.opacity(isSearchFocused ? 0.7 : 0.0), lineWidth: 1.5)
@@ -283,11 +296,11 @@ struct MotionPreviewView: View {
         .frame(width: 10, height: 10)
       VStack(alignment: .leading, spacing: 4) {
         Text(title)
-          .font(.system(size: 13, weight: .semibold))
-          .foregroundStyle(.primary)
+          .font(.headline)
+          .foregroundStyle(AppleDesignPreviewTokens.primaryText)
         Text(subtitle)
-          .font(.system(size: 12, weight: .regular))
-          .foregroundStyle(.secondary)
+          .font(.footnote)
+          .foregroundStyle(AppleDesignPreviewTokens.secondaryText)
       }
       Spacer()
     }
@@ -295,7 +308,7 @@ struct MotionPreviewView: View {
     .padding(.vertical, 10)
     .background(
       RoundedRectangle(cornerRadius: 14, style: .continuous)
-        .fill(isHighlighted ? sceneTint.opacity(0.14) : .white.opacity(0.42))
+        .fill(isHighlighted ? sceneTint.opacity(0.14) : AppleDesignPreviewTokens.secondarySurface.opacity(0.82))
     )
   }
 
@@ -325,21 +338,21 @@ struct MotionPreviewView: View {
         .font(.system(size: 24, weight: .medium))
         .foregroundStyle(sceneTint)
       Text(title)
-        .font(.system(size: 16, weight: .semibold))
+        .font(.headline)
       Text(subtitle)
-        .font(.system(size: 13, weight: .regular))
-        .foregroundStyle(.secondary)
+        .font(.footnote)
+        .foregroundStyle(AppleDesignPreviewTokens.secondaryText)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     .padding(18)
-    .background(.white.opacity(0.46), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+    .background(AppleDesignPreviewTokens.secondarySurface.opacity(0.82), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
     .padding(.horizontal, 2)
   }
 
   private var modalScene: some View {
     ZStack(alignment: .bottom) {
       RoundedRectangle(cornerRadius: 24, style: .continuous)
-        .fill(.white.opacity(0.18))
+        .fill(AppleDesignPreviewTokens.secondarySurface.opacity(0.68))
         .overlay(Color.black.opacity(backdropOpacity))
         .onTapGesture {
           dismissSheet()
@@ -347,16 +360,16 @@ struct MotionPreviewView: View {
 
       VStack(spacing: 12) {
         Capsule()
-          .fill(Color.white.opacity(0.9))
+          .fill(AppleDesignPreviewTokens.primarySurface.opacity(0.96))
           .frame(width: 44, height: 5)
           .padding(.top, 10)
 
         VStack(alignment: .leading, spacing: 10) {
           Text("Focused Task")
-            .font(.system(size: 16, weight: .semibold))
+            .font(.headline)
           Text("탭으로 열고 아래로 드래그해 닫는 시트 프레젠테이션입니다.")
-            .font(.system(size: 13, weight: .regular))
-            .foregroundStyle(.secondary)
+            .font(.footnote)
+            .foregroundStyle(AppleDesignPreviewTokens.secondaryText)
         }
 
         Button(modalOffset < 100 ? "Dismiss" : "Present") {
@@ -371,7 +384,7 @@ struct MotionPreviewView: View {
       .padding(.horizontal, 18)
       .frame(maxWidth: .infinity)
       .frame(height: 148)
-      .background(.white.opacity(0.6), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+      .background(AppleDesignPreviewTokens.primarySurface.opacity(0.88), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
       .offset(y: modalOffset)
       .gesture(
         DragGesture()
@@ -428,7 +441,7 @@ struct MotionPreviewView: View {
       .padding(.top, 14)
       .padding(.bottom, 18)
       .frame(maxWidth: .infinity)
-      .background(.white.opacity(0.62), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+      .background(AppleDesignPreviewTokens.primarySurface.opacity(0.88), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
       .offset(y: shareSheetPresented ? 0 : 150)
       .animation(.spring(duration: 0.42, bounce: 0.16), value: shareSheetPresented)
     }
@@ -447,14 +460,15 @@ struct MotionPreviewView: View {
             .foregroundStyle(sceneTint)
         }
       Text(title)
-        .font(.system(size: 12, weight: .medium))
+        .font(.footnote)
+        .foregroundStyle(AppleDesignPreviewTokens.primaryText)
     }
   }
 
   private var menuScene: some View {
     ZStack {
       RoundedRectangle(cornerRadius: 22, style: .continuous)
-        .fill(.white.opacity(0.22))
+        .fill(AppleDesignPreviewTokens.secondarySurface.opacity(0.72))
 
       VStack {
         HStack {
@@ -483,7 +497,7 @@ struct MotionPreviewView: View {
         }
         .padding(14)
         .frame(width: 144)
-        .background(.white.opacity(0.68), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .background(AppleDesignPreviewTokens.primarySurface.opacity(0.92), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         .offset(x: 32, y: 8)
         .transition(.opacity.combined(with: .scale(scale: 0.94)))
       }
@@ -495,8 +509,8 @@ struct MotionPreviewView: View {
       Image(systemName: symbol)
         .foregroundStyle(destructive ? Color.red : sceneTint)
       Text(title)
-        .font(.system(size: 13, weight: .semibold))
-        .foregroundStyle(destructive ? .red : .primary)
+        .font(.headline)
+        .foregroundStyle(destructive ? .red : AppleDesignPreviewTokens.primaryText)
       Spacer()
     }
   }
@@ -518,14 +532,14 @@ struct MotionPreviewView: View {
       }
 
       RoundedRectangle(cornerRadius: 20, style: .continuous)
-        .fill(.white.opacity(0.48))
+        .fill(AppleDesignPreviewTokens.primarySurface.opacity(0.82))
         .overlay(alignment: .topLeading) {
           VStack(alignment: .leading, spacing: 10) {
             Text(selectedPage == 2 ? "Comment mode" : "Draft mode")
-              .font(.system(size: 14, weight: .semibold))
+              .font(.headline)
             Text(selectedPage == 2 ? "리뷰 메모와 수정 제안이 강조됩니다." : "작성 중인 본문이 집중 상태로 유지됩니다.")
-              .font(.system(size: 12, weight: .regular))
-              .foregroundStyle(.secondary)
+              .font(.footnote)
+              .foregroundStyle(AppleDesignPreviewTokens.secondaryText)
             Rectangle()
               .fill(sceneTint)
               .frame(width: 2, height: 24)
@@ -580,19 +594,19 @@ struct MotionPreviewView: View {
 
     return VStack(alignment: .leading, spacing: 8) {
       Text(title)
-        .font(.system(size: 13, weight: .semibold))
+        .font(.headline)
       RoundedRectangle(cornerRadius: 6, style: .continuous)
-        .fill(isSelected ? sceneTint.opacity(0.28) : Color.white.opacity(0.48))
+        .fill(isSelected ? sceneTint.opacity(0.28) : AppleDesignPreviewTokens.primarySurface.opacity(0.88))
         .frame(height: 10)
       RoundedRectangle(cornerRadius: 6, style: .continuous)
-        .fill(Color.white.opacity(0.4))
+        .fill(AppleDesignPreviewTokens.fill)
         .frame(height: 10)
     }
     .frame(maxWidth: .infinity, minHeight: 76, alignment: .leading)
     .padding(14)
     .background(
       RoundedRectangle(cornerRadius: 18, style: .continuous)
-        .fill(isSelected ? sceneTint.opacity(0.16) : .white.opacity(0.3))
+        .fill(isSelected ? sceneTint.opacity(0.16) : AppleDesignPreviewTokens.secondarySurface.opacity(0.74))
     )
     .onTapGesture {
       selectedCollectionCard = index
@@ -636,7 +650,7 @@ struct MotionPreviewView: View {
 
   private func iconTile(_ symbol: String) -> some View {
     RoundedRectangle(cornerRadius: 16, style: .continuous)
-      .fill(.white.opacity(0.4))
+      .fill(AppleDesignPreviewTokens.secondarySurface.opacity(0.8))
       .frame(width: 54, height: 54)
       .overlay {
         Image(systemName: symbol)
@@ -657,7 +671,7 @@ struct MotionPreviewView: View {
         .frame(height: 118)
         .overlay(alignment: .bottomLeading) {
           RoundedRectangle(cornerRadius: 6, style: .continuous)
-            .fill(Color.white.opacity(0.82))
+            .fill(AppleDesignPreviewTokens.primarySurface.opacity(0.96))
             .frame(width: 90, height: 10)
             .padding(14)
         }
@@ -665,7 +679,7 @@ struct MotionPreviewView: View {
       HStack(spacing: 10) {
         ForEach(0..<2, id: \.self) { index in
           RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(index == selectedCollectionCard ? sceneTint.opacity(0.18) : .white.opacity(0.34))
+            .fill(index == selectedCollectionCard ? sceneTint.opacity(0.18) : AppleDesignPreviewTokens.secondarySurface.opacity(0.8))
             .frame(height: 54)
             .onTapGesture {
               selectedCollectionCard = index
@@ -678,7 +692,7 @@ struct MotionPreviewView: View {
   private var labelScene: some View {
     VStack(alignment: .leading, spacing: 12) {
       Label("Primary label", systemImage: "star.fill")
-        .font(.system(size: 17, weight: .semibold))
+        .font(.headline)
       Label("Secondary description", systemImage: "clock")
         .foregroundStyle(.secondary)
       Label("Status", systemImage: "checkmark.circle.fill")
@@ -705,23 +719,23 @@ struct MotionPreviewView: View {
 
       VStack(alignment: .leading, spacing: 5) {
         Text(title)
-          .font(.system(size: 14, weight: .semibold))
+          .font(.headline)
         Text(subtitle)
-          .font(.system(size: 12, weight: .regular))
-          .foregroundStyle(.secondary)
+          .font(.footnote)
+          .foregroundStyle(AppleDesignPreviewTokens.secondaryText)
       }
 
       Spacer()
 
       Image(systemName: "chevron.right")
-        .font(.system(size: 12, weight: .semibold))
-        .foregroundStyle(.tertiary)
+        .font(.footnote.weight(.semibold))
+        .foregroundStyle(AppleDesignPreviewTokens.tertiaryText)
     }
     .padding(.horizontal, 14)
     .padding(.vertical, 12)
     .background(
       RoundedRectangle(cornerRadius: 18, style: .continuous)
-        .fill(isSelected ? sceneTint.opacity(0.12) : .white.opacity(0.34))
+        .fill(isSelected ? sceneTint.opacity(0.12) : AppleDesignPreviewTokens.secondarySurface.opacity(0.8))
     )
     .onTapGesture {
       selectedListRow = index
@@ -751,10 +765,10 @@ struct MotionPreviewView: View {
   private func pageCard(title: String, subtitle: String) -> some View {
     VStack(alignment: .leading, spacing: 10) {
       Text(title)
-        .font(.system(size: 16, weight: .semibold))
+        .font(.headline)
       Text(subtitle)
-        .font(.system(size: 13, weight: .regular))
-        .foregroundStyle(.secondary)
+        .font(.footnote)
+        .foregroundStyle(AppleDesignPreviewTokens.secondaryText)
       Spacer()
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
@@ -773,7 +787,7 @@ struct MotionPreviewView: View {
     VStack(spacing: 14) {
       HStack {
         Text("Sort by")
-          .font(.system(size: 14, weight: .semibold))
+          .font(.headline)
         Spacer()
       }
 
@@ -786,12 +800,12 @@ struct MotionPreviewView: View {
       .tint(sceneTint)
 
       RoundedRectangle(cornerRadius: 18, style: .continuous)
-        .fill(pickerSelection == 2 ? sceneTint.opacity(0.16) : .white.opacity(0.36))
+        .fill(pickerSelection == 2 ? sceneTint.opacity(0.16) : AppleDesignPreviewTokens.secondarySurface.opacity(0.82))
         .frame(height: 108)
         .overlay {
           Text(["Latest first", "Popular now", "Saved collection"][pickerSelection])
-            .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(pickerSelection == 2 ? sceneTint : .secondary)
+            .font(.headline)
+            .foregroundStyle(pickerSelection == 2 ? sceneTint : AppleDesignPreviewTokens.secondaryText)
         }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -812,7 +826,7 @@ struct MotionPreviewView: View {
             .fill(sceneTint.opacity(0.22))
             .frame(width: 82, height: 10)
           RoundedRectangle(cornerRadius: 4, style: .continuous)
-            .fill(Color.white.opacity(0.52))
+            .fill(AppleDesignPreviewTokens.fill)
             .frame(width: 110, height: 8)
         }
       }
@@ -837,12 +851,12 @@ struct MotionPreviewView: View {
       .pickerStyle(.segmented)
 
       RoundedRectangle(cornerRadius: 20, style: .continuous)
-        .fill(pickerSelection == 2 ? sceneTint.opacity(0.12) : .white.opacity(0.34))
+        .fill(pickerSelection == 2 ? sceneTint.opacity(0.12) : AppleDesignPreviewTokens.secondarySurface.opacity(0.82))
         .frame(height: 112)
         .overlay {
           Text(["패턴 보기", "구성요소 보기", "저장된 보기"][pickerSelection])
-            .font(.system(size: 15, weight: .semibold))
-            .foregroundStyle(pickerSelection == 2 ? sceneTint : .secondary)
+            .font(.headline)
+            .foregroundStyle(pickerSelection == 2 ? sceneTint : AppleDesignPreviewTokens.secondaryText)
         }
     }
   }
@@ -850,14 +864,14 @@ struct MotionPreviewView: View {
   private var textFieldScene: some View {
     VStack(alignment: .leading, spacing: 10) {
       Text("Email")
-        .font(.system(size: 14, weight: .semibold))
-        .foregroundStyle(.secondary)
+        .font(.headline)
+        .foregroundStyle(AppleDesignPreviewTokens.secondaryText)
 
       TextField("designer@apple.com", text: $draftText)
         .textFieldStyle(.plain)
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(.white.opacity(0.52), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .background(AppleDesignPreviewTokens.primarySurface.opacity(0.88), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
           RoundedRectangle(cornerRadius: 14, style: .continuous)
             .stroke(sceneTint.opacity(isTextFieldFocused ? 0.68 : 0.0), lineWidth: 1.5)
@@ -868,8 +882,8 @@ struct MotionPreviewView: View {
         }
 
       Text(isTextFieldFocused ? "입력 중에는 focus ring이 유지됩니다." : "필드를 탭해 focus 상태를 확인해 보세요.")
-        .font(.system(size: 12, weight: .regular))
-        .foregroundStyle(.secondary)
+        .font(.footnote)
+        .foregroundStyle(AppleDesignPreviewTokens.secondaryText)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
   }
@@ -879,22 +893,22 @@ struct MotionPreviewView: View {
       Toggle(isOn: $toggleValue) {
         VStack(alignment: .leading, spacing: 4) {
           Text("Notifications")
-            .font(.system(size: 15, weight: .semibold))
+            .font(.headline)
           Text("즉시 반영되는 설정")
-            .font(.system(size: 12, weight: .regular))
-            .foregroundStyle(.secondary)
+            .font(.footnote)
+            .foregroundStyle(AppleDesignPreviewTokens.secondaryText)
         }
       }
       .toggleStyle(.switch)
       .tint(sceneTint)
 
       RoundedRectangle(cornerRadius: 16, style: .continuous)
-        .fill(toggleValue ? sceneTint.opacity(0.14) : .white.opacity(0.36))
+        .fill(toggleValue ? sceneTint.opacity(0.14) : AppleDesignPreviewTokens.secondarySurface.opacity(0.82))
         .frame(height: 86)
         .overlay {
           Text(toggleValue ? "On state preview" : "Off state preview")
-            .font(.system(size: 14, weight: .semibold))
-            .foregroundStyle(toggleValue ? sceneTint : .secondary)
+            .font(.headline)
+            .foregroundStyle(toggleValue ? sceneTint : AppleDesignPreviewTokens.secondaryText)
         }
     }
     .padding(.horizontal, 4)
