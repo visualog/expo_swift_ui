@@ -29,7 +29,13 @@ private enum AppleDesignSemanticTokens {
     static let pageInset: CGFloat = 16
     static let sectionGap: CGFloat = 16
     static let compactGap: CGFloat = 12
-    static let panelPadding: CGFloat = 14
+    static let cardGap: CGFloat = 12
+    static let panelPadding: CGFloat = 16
+    static let heroPadding: CGFloat = 16
+    static let heroBottomPadding: CGFloat = 24
+    static let detailSectionGap: CGFloat = 16
+    static let screenTopPadding: CGFloat = 12
+    static let screenBottomPadding: CGFloat = 24
   }
 }
 
@@ -122,6 +128,18 @@ private struct CompatibleNavigationContainer<Content: View>: View {
       }
       .navigationViewStyle(.stack)
     }
+  }
+}
+
+private struct AppleScreenHeader: View {
+  let title: String
+
+  var body: some View {
+    Text(title)
+      .font(.largeTitle.weight(.bold))
+      .foregroundStyle(AppleDesignSemanticTokens.Colors.primaryText)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .padding(.top, 4)
   }
 }
 
@@ -286,7 +304,7 @@ private extension View {
   func liquidGlassPanel(
     cornerRadius: CGFloat = 22,
     tint: Color? = nil,
-    padding: CGFloat = 16
+    padding: CGFloat = AppleDesignSemanticTokens.Spacing.panelPadding
   ) -> some View {
     modifier(LiquidGlassPanelModifier(cornerRadius: cornerRadius, tint: tint, padding: padding))
   }
@@ -294,7 +312,7 @@ private extension View {
   func lightweightLiquidPanel(
     cornerRadius: CGFloat = 22,
     tint: Color? = nil,
-    padding: CGFloat = 16
+    padding: CGFloat = AppleDesignSemanticTokens.Spacing.panelPadding
   ) -> some View {
     modifier(LightweightLiquidPanelModifier(cornerRadius: cornerRadius, tint: tint, padding: padding))
   }
@@ -334,9 +352,9 @@ private struct AppleDesignTopicThumbnail: View {
       )
 
       thumbnailContent
-        .padding(.horizontal, 18)
-        .padding(.top, 18)
-        .padding(.bottom, 26)
+        .padding(.horizontal, AppleDesignSemanticTokens.Spacing.heroPadding)
+        .padding(.top, AppleDesignSemanticTokens.Spacing.heroPadding)
+        .padding(.bottom, AppleDesignSemanticTokens.Spacing.heroBottomPadding)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
 
       LinearGradient(
@@ -399,7 +417,7 @@ private struct AppleDesignTopicThumbnail: View {
               .fill(AppleDesignSemanticTokens.Colors.secondaryFill)
               .frame(width: 94, height: 8)
           }
-          .padding(12)
+          .padding(AppleDesignSemanticTokens.Spacing.compactGap)
         }
 
       RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -414,8 +432,8 @@ private struct AppleDesignTopicThumbnail: View {
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(tint)
             )
-            .padding(.leading, 12)
-            .padding(.vertical, 10)
+            .padding(.leading, AppleDesignSemanticTokens.Spacing.compactGap)
+            .padding(.vertical, AppleDesignSemanticTokens.Spacing.compactGap)
         }
         .overlay(alignment: .topLeading) {
           VStack(alignment: .leading, spacing: 8) {
@@ -427,8 +445,8 @@ private struct AppleDesignTopicThumbnail: View {
               .frame(height: 12)
           }
           .padding(.leading, 68)
-          .padding(.trailing, 14)
-          .padding(.top, 14)
+          .padding(.trailing, AppleDesignSemanticTokens.Spacing.panelPadding)
+          .padding(.top, AppleDesignSemanticTokens.Spacing.panelPadding)
         }
     }
   }
@@ -474,7 +492,7 @@ private struct AppleDesignTopicThumbnail: View {
           .fill(AppleDesignSemanticTokens.Colors.secondaryFill)
           .frame(height: 8)
       }
-      .padding(.horizontal, 12)
+      .padding(.horizontal, AppleDesignSemanticTokens.Spacing.compactGap)
       .frame(height: 34)
       .background(AppleDesignSemanticTokens.Colors.backgroundSecondary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
 
@@ -488,8 +506,8 @@ private struct AppleDesignTopicThumbnail: View {
               .fill(index == 0 ? tint.opacity(0.16) : AppleDesignSemanticTokens.Colors.secondaryFill)
               .frame(height: 8)
           }
-          .padding(.horizontal, 10)
-          .padding(.vertical, 8)
+          .padding(.horizontal, AppleDesignSemanticTokens.Spacing.compactGap)
+          .padding(.vertical, AppleDesignSemanticTokens.Spacing.compactGap)
           .background(
             index == 0
               ? tint.opacity(0.08)
@@ -514,7 +532,7 @@ private struct AppleDesignTopicThumbnail: View {
               .fill(AppleDesignSemanticTokens.Colors.secondaryFill.opacity(0.8))
               .frame(width: 84, height: 8)
           }
-          .padding(12)
+          .padding(AppleDesignSemanticTokens.Spacing.compactGap)
         }
 
       RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -574,7 +592,7 @@ private struct AppleDesignTopicThumbnail: View {
           }
         }
       }
-      .padding(10)
+      .padding(AppleDesignSemanticTokens.Spacing.compactGap)
       .background(AppleDesignSemanticTokens.Colors.backgroundSecondary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
       .overlay(alignment: .topTrailing) {
         Image(systemName: "ellipsis")
@@ -662,8 +680,8 @@ private struct AppleDesignTopicThumbnail: View {
             .padding(.trailing, 3)
         }
     }
-    .padding(.horizontal, 12)
-    .padding(.vertical, 10)
+    .padding(.horizontal, AppleDesignSemanticTokens.Spacing.compactGap)
+    .padding(.vertical, AppleDesignSemanticTokens.Spacing.compactGap)
     .background(AppleDesignSemanticTokens.Colors.backgroundSecondary, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
   }
 
@@ -728,23 +746,42 @@ private struct AppleDesignTopicCard: View {
   let onToggleFavorite: () -> Void
   let onSelect: () -> Void
 
+  private var statusColor: Color {
+    topic.status == .planned ? Color(hex: topic.tintHex) : AppleDesignSemanticTokens.Colors.secondaryText
+  }
+
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       AppleDesignTopicThumbnail(topic: topic)
         .frame(maxWidth: .infinity)
         .frame(height: 184)
 
-      HStack(alignment: .top, spacing: 12) {
+      HStack(alignment: .top, spacing: AppleDesignSemanticTokens.Spacing.compactGap) {
         VStack(alignment: .leading, spacing: 8) {
           Text(topic.koreanTitle)
             .font(.title3.weight(.semibold))
             .foregroundStyle(AppleDesignSemanticTokens.Colors.primaryText)
             .lineLimit(2)
 
-          Text(topic.usageContext)
-            .lineLimit(1)
-          .font(.subheadline)
-          .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
+          HStack(spacing: 8) {
+            Text(topic.usageContext)
+              .lineLimit(1)
+              .font(.subheadline)
+              .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
+
+            if topic.status == .planned {
+              Text("준비 중")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color(hex: topic.tintHex))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color(hex: topic.tintHex).opacity(0.12), in: Capsule())
+            }
+          }
+
+          Text(topic.status == .implemented ? "구현됨" : "준비 중")
+            .font(.caption)
+            .foregroundStyle(statusColor)
         }
 
         Spacer(minLength: 0)
@@ -758,12 +795,115 @@ private struct AppleDesignTopicCard: View {
         }
         .buttonStyle(.plain)
       }
-      .padding(16)
+      .padding(AppleDesignSemanticTokens.Spacing.panelPadding)
+      .frame(maxWidth: .infinity, alignment: .leading)
     }
     .frame(maxWidth: .infinity, alignment: .topLeading)
     .lightweightLiquidPanel(cornerRadius: 24, tint: Color(hex: topic.tintHex), padding: 0)
     .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     .onTapGesture(perform: onSelect)
+  }
+}
+
+private struct AppleComponentGroupCard: View {
+  let group: AppleComponentGroup
+  let topics: [AppleDesignTopic]
+
+  private var implementedCount: Int {
+    topics.filter { $0.status == .implemented }.count
+  }
+
+  private var plannedCount: Int {
+    topics.filter { $0.status == .planned }.count
+  }
+
+  var body: some View {
+    HStack(alignment: .center, spacing: AppleDesignSemanticTokens.Spacing.compactGap) {
+      Circle()
+        .fill(AppleDesignSemanticTokens.Colors.subtleFill)
+        .frame(width: 44, height: 44)
+        .overlay {
+          Image(systemName: "square.grid.2x2")
+            .foregroundStyle(.blue)
+        }
+
+      VStack(alignment: .leading, spacing: 6) {
+        Text(group.title)
+          .font(.headline)
+          .foregroundStyle(AppleDesignSemanticTokens.Colors.primaryText)
+
+        Text("\(topics.count)개 항목 · \(implementedCount)개 구현 · \(plannedCount)개 준비 중")
+          .font(.subheadline)
+          .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
+      }
+
+      Spacer(minLength: 0)
+
+      Image(systemName: "chevron.right")
+        .font(.body.weight(.semibold))
+        .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
+        .frame(width: 44, height: 44)
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .lightweightLiquidPanel(cornerRadius: 24, padding: AppleDesignSemanticTokens.Spacing.panelPadding)
+  }
+}
+
+private struct AppleComponentGroupScreen: View {
+  let group: AppleComponentGroup
+  let topics: [AppleDesignTopic]
+  @ObservedObject var favoritesStore: FavoritesStore
+
+  @State private var selectedTopic: AppleDesignTopic?
+
+  private var groupTopics: [AppleDesignTopic] {
+    topics.filter { $0.libraryKind == .components && $0.componentGroup == group }
+  }
+
+  private var plannedTopics: [AppleDesignTopic] {
+    groupTopics.filter { $0.status == .planned }
+  }
+
+  var body: some View {
+    ScrollView(showsIndicators: false) {
+      VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.sectionGap) {
+        AppleScreenHeader(title: group.title)
+
+        HStack {
+          Text("공식 구성요소 항목")
+            .font(.title2)
+            .accessibilityAddTraits(.isHeader)
+          Spacer()
+          Text(plannedTopics.isEmpty ? "\(groupTopics.count)개" : "\(groupTopics.count)개 · \(plannedTopics.count) 준비 중")
+            .font(.footnote)
+            .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+
+        LazyVStack(spacing: AppleDesignSemanticTokens.Spacing.cardGap) {
+          ForEach(groupTopics) { topic in
+            AppleDesignTopicCard(
+              topic: topic,
+              isFavorite: favoritesStore.isFavorite(topic.id),
+              onToggleFavorite: { favoritesStore.toggle(topic.id) },
+              onSelect: { selectedTopic = topic }
+            )
+          }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .padding(.horizontal, AppleDesignSemanticTokens.Spacing.pageInset)
+      .padding(.top, AppleDesignSemanticTokens.Spacing.screenTopPadding)
+      .padding(.bottom, AppleDesignSemanticTokens.Spacing.screenBottomPadding)
+    }
+    .background {
+      LiquidGlassLibraryBackground()
+    }
+    .hideNavigationBarForCustomHeader()
+    .sheet(item: $selectedTopic) { topic in
+      AppleDesignTopicDetailSheet(topic: topic, favoritesStore: favoritesStore)
+    }
   }
 }
 
@@ -782,17 +922,49 @@ private struct AppleDesignTopicDetailSheet: View {
     """
   }
 
+  private var plannedReferencePlaceholder: some View {
+    VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.compactGap) {
+      HStack(spacing: AppleDesignSemanticTokens.Spacing.compactGap) {
+        Circle()
+          .fill(Color(hex: topic.tintHex).opacity(0.16))
+          .frame(width: 52, height: 52)
+          .overlay {
+            Image(systemName: topic.icon)
+              .font(.title3.weight(.semibold))
+              .foregroundStyle(Color(hex: topic.tintHex))
+          }
+
+        VStack(alignment: .leading, spacing: 6) {
+          Text("준비 중인 레퍼런스")
+            .font(.headline)
+            .foregroundStyle(AppleDesignSemanticTokens.Colors.primaryText)
+          Text("이 HIG 항목은 구조만 먼저 미러링되어 있고, 인터랙티브 샘플은 아직 준비 중입니다.")
+            .font(.body)
+            .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
+        }
+      }
+
+      Text("공식 HIG 경로를 먼저 확인하고, 샘플 scene은 다음 단계에서 채워집니다.")
+        .font(.footnote)
+        .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .liquidGlassPanel(tint: Color(hex: topic.tintHex), padding: AppleDesignSemanticTokens.Spacing.panelPadding)
+  }
+
   var body: some View {
     CompatibleNavigationContainer {
       ScrollView(showsIndicators: false) {
-        VStack(alignment: .leading, spacing: 18) {
-          MotionPreviewView(topic: topic)
+        VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.detailSectionGap) {
+          AppleScreenHeader(title: topic.koreanTitle)
 
-          VStack(alignment: .leading, spacing: 10) {
-            Text(topic.koreanTitle)
-              .font(.largeTitle)
-              .accessibilityAddTraits(.isHeader)
+          if topic.status == .implemented {
+            MotionPreviewView(topic: topic)
+          } else {
+            plannedReferencePlaceholder
+          }
 
+          VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.compactGap) {
             Text(topic.summary)
               .font(.body)
               .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
@@ -801,11 +973,12 @@ private struct AppleDesignTopicDetailSheet: View {
             metadataRow(title: "HIG 경로", value: topic.higPathTitle)
             metadataRow(title: "플랫폼 메모", value: topic.platformNotes)
           }
-          .liquidGlassPanel(tint: Color(hex: topic.tintHex))
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .liquidGlassPanel(tint: Color(hex: topic.tintHex), padding: AppleDesignSemanticTokens.Spacing.panelPadding)
 
-          VStack(alignment: .leading, spacing: 12) {
+          VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.compactGap) {
             DisclosureGroup("핵심 포인트") {
-              VStack(alignment: .leading, spacing: 12) {
+              VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.compactGap) {
                 ForEach(topic.keyPoints, id: \.self) { point in
                   HStack(alignment: .top, spacing: 10) {
                     Circle()
@@ -821,11 +994,12 @@ private struct AppleDesignTopicDetailSheet: View {
             }
             .font(.title3.weight(.semibold))
           }
-          .liquidGlassPanel(tint: Color(hex: topic.tintHex))
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .liquidGlassPanel(tint: Color(hex: topic.tintHex), padding: AppleDesignSemanticTokens.Spacing.panelPadding)
 
-          VStack(alignment: .leading, spacing: 12) {
+          VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.compactGap) {
             DisclosureGroup("SwiftUI 참고") {
-              VStack(alignment: .leading, spacing: 12) {
+              VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.compactGap) {
                 Text(topic.swiftUIReference)
                   .font(.body)
                   .foregroundStyle(AppleDesignSemanticTokens.Colors.primaryText)
@@ -838,9 +1012,10 @@ private struct AppleDesignTopicDetailSheet: View {
             }
             .font(.title3.weight(.semibold))
           }
-          .liquidGlassPanel(tint: Color(hex: topic.tintHex))
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .liquidGlassPanel(tint: Color(hex: topic.tintHex), padding: AppleDesignSemanticTokens.Spacing.panelPadding)
 
-          VStack(alignment: .leading, spacing: 12) {
+          VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.compactGap) {
             Text("공식 가이드")
               .font(.title2)
               .accessibilityAddTraits(.isHeader)
@@ -858,17 +1033,18 @@ private struct AppleDesignTopicDetailSheet: View {
               .font(.footnote)
               .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
           }
-          .liquidGlassPanel(tint: Color(hex: topic.tintHex))
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .liquidGlassPanel(tint: Color(hex: topic.tintHex), padding: AppleDesignSemanticTokens.Spacing.panelPadding)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, AppleDesignSemanticTokens.Spacing.pageInset)
-        .padding(.top, 12)
-        .padding(.bottom, 30)
+        .padding(.top, AppleDesignSemanticTokens.Spacing.screenTopPadding)
+        .padding(.bottom, AppleDesignSemanticTokens.Spacing.screenBottomPadding)
       }
       .background {
         LiquidGlassLibraryBackground()
       }
-      .navigationTitle(topic.koreanTitle)
-      .navigationBarTitleDisplayMode(.inline)
+      .hideNavigationBarForCustomHeader()
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
           Button(action: { favoritesStore.toggle(topic.id) }) {
@@ -888,6 +1064,7 @@ private struct AppleDesignTopicDetailSheet: View {
         .font(.body)
         .foregroundStyle(AppleDesignSemanticTokens.Colors.primaryText)
     }
+    .frame(maxWidth: .infinity, alignment: .leading)
   }
 }
 
@@ -906,43 +1083,62 @@ private struct AppleDesignLibraryHomeScreen: View {
     CompatibleNavigationContainer {
       ScrollView(showsIndicators: false) {
         VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.sectionGap) {
+          AppleScreenHeader(title: "Apple HIG 레퍼런스")
+
           Picker("라이브러리 분류", selection: $selectedLibraryKind) {
             ForEach(AppleLibraryKind.allCases) { kind in
               Text(kind.koreanTitle).tag(kind)
             }
           }
           .pickerStyle(.segmented)
+          .frame(maxWidth: .infinity)
 
           HStack {
-            Text(selectedLibraryKind == .patterns ? "실제 화면 패턴" : "실제 UI 구성요소")
+            Text(selectedLibraryKind == .patterns ? "실제 화면 패턴" : "공식 구성요소 그룹")
               .font(.title2)
               .accessibilityAddTraits(.isHeader)
             Spacer()
-            Text("\(filteredTopics.count)개")
+            Text("\(selectedLibraryKind == .patterns ? filteredTopics.count : AppleComponentGroup.allCases.count)개")
               .font(.footnote)
               .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
           }
+          .frame(maxWidth: .infinity, alignment: .leading)
 
-          LazyVStack(spacing: 12) {
-            ForEach(filteredTopics) { topic in
-              AppleDesignTopicCard(
-                topic: topic,
-                isFavorite: favoritesStore.isFavorite(topic.id),
-                onToggleFavorite: { favoritesStore.toggle(topic.id) },
-                onSelect: { selectedTopic = topic }
-              )
+          if selectedLibraryKind == .patterns {
+            LazyVStack(spacing: AppleDesignSemanticTokens.Spacing.cardGap) {
+              ForEach(filteredTopics) { topic in
+                AppleDesignTopicCard(
+                  topic: topic,
+                  isFavorite: favoritesStore.isFavorite(topic.id),
+                  onToggleFavorite: { favoritesStore.toggle(topic.id) },
+                  onSelect: { selectedTopic = topic }
+                )
+              }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+          } else {
+            LazyVStack(spacing: AppleDesignSemanticTokens.Spacing.cardGap) {
+              ForEach(AppleComponentGroup.allCases) { group in
+                let groupTopics = filteredTopics.filter { $0.componentGroup == group }
+
+                NavigationLink(destination: AppleComponentGroupScreen(group: group, topics: topics, favoritesStore: favoritesStore)) {
+                  AppleComponentGroupCard(group: group, topics: groupTopics)
+                }
+                .buttonStyle(.plain)
+              }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
           }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, AppleDesignSemanticTokens.Spacing.pageInset)
-        .padding(.top, 10)
-        .padding(.bottom, 22)
+        .padding(.top, AppleDesignSemanticTokens.Spacing.screenTopPadding)
+        .padding(.bottom, AppleDesignSemanticTokens.Spacing.screenBottomPadding)
       }
       .background {
         LiquidGlassLibraryBackground()
       }
-      .navigationTitle("Apple HIG 레퍼런스")
-      .navigationBarTitleDisplayMode(.large)
+      .hideNavigationBarForCustomHeader()
       .sheet(item: $selectedTopic) { topic in
         AppleDesignTopicDetailSheet(topic: topic, favoritesStore: favoritesStore)
       }
@@ -957,8 +1153,26 @@ private struct SearchScreen: View {
 
   @State private var selectedTopic: AppleDesignTopic?
 
+  private var normalizedQuery: String {
+    searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+  }
+
+  private var filteredGroups: [AppleComponentGroup] {
+    AppleComponentGroup.allCases.filter { group in
+      normalizedQuery.isEmpty ||
+      group.title.localizedCaseInsensitiveContains(normalizedQuery) ||
+      topics.contains {
+        $0.componentGroup == group &&
+        (
+          $0.name.localizedCaseInsensitiveContains(normalizedQuery) ||
+          $0.koreanTitle.localizedCaseInsensitiveContains(normalizedQuery) ||
+          $0.usageContext.localizedCaseInsensitiveContains(normalizedQuery)
+        )
+      }
+    }
+  }
+
   private var filteredTopics: [AppleDesignTopic] {
-    let normalizedQuery = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !normalizedQuery.isEmpty else {
       return topics
     }
@@ -973,22 +1187,29 @@ private struct SearchScreen: View {
     }
   }
 
+  private var totalResultCount: Int {
+    filteredGroups.count + filteredTopics.count
+  }
+
   var body: some View {
     CompatibleNavigationContainer {
       ScrollView(showsIndicators: false) {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.sectionGap) {
+          AppleScreenHeader(title: "검색")
+
           HStack {
-            Text(searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "전체 항목" : "검색 결과")
+            Text(normalizedQuery.isEmpty ? "전체 항목" : "검색 결과")
               .font(.title2)
               .accessibilityAddTraits(.isHeader)
             Spacer()
-            Text("\(filteredTopics.count)개")
+            Text("\(totalResultCount)개")
               .font(.footnote)
               .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
           }
+          .frame(maxWidth: .infinity, alignment: .leading)
 
-          if filteredTopics.isEmpty {
-            VStack(spacing: 10) {
+          if filteredTopics.isEmpty && filteredGroups.isEmpty {
+            VStack(alignment: .center, spacing: 10) {
               Image(systemName: "magnifyingglass")
                 .font(.title)
                 .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
@@ -1000,29 +1221,60 @@ private struct SearchScreen: View {
                 .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
-            .lightweightLiquidPanel(cornerRadius: 24, padding: 20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .lightweightLiquidPanel(cornerRadius: 24, padding: AppleDesignSemanticTokens.Spacing.panelPadding)
           } else {
-            LazyVStack(spacing: 12) {
-              ForEach(filteredTopics) { topic in
-                AppleDesignTopicCard(
-                  topic: topic,
-                  isFavorite: favoritesStore.isFavorite(topic.id),
-                  onToggleFavorite: { favoritesStore.toggle(topic.id) },
-                  onSelect: { selectedTopic = topic }
-                )
+            VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.sectionGap) {
+              if !filteredGroups.isEmpty {
+                VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.cardGap) {
+                  Text("구성요소 그룹")
+                    .font(.headline)
+                    .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
+
+                  ForEach(filteredGroups) { group in
+                    let groupTopics = topics.filter { $0.componentGroup == group }
+
+                    NavigationLink(destination: AppleComponentGroupScreen(group: group, topics: topics, favoritesStore: favoritesStore)) {
+                      AppleComponentGroupCard(group: group, topics: groupTopics)
+                    }
+                    .buttonStyle(.plain)
+                  }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+              }
+
+              if !filteredTopics.isEmpty {
+                VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.cardGap) {
+                  Text("HIG 항목")
+                    .font(.headline)
+                    .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
+
+                  LazyVStack(spacing: AppleDesignSemanticTokens.Spacing.cardGap) {
+                    ForEach(filteredTopics) { topic in
+                      AppleDesignTopicCard(
+                        topic: topic,
+                        isFavorite: favoritesStore.isFavorite(topic.id),
+                        onToggleFavorite: { favoritesStore.toggle(topic.id) },
+                        onSelect: { selectedTopic = topic }
+                      )
+                    }
+                  }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
               }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
           }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, AppleDesignSemanticTokens.Spacing.pageInset)
-        .padding(.top, 10)
-        .padding(.bottom, 22)
+        .padding(.top, AppleDesignSemanticTokens.Spacing.screenTopPadding)
+        .padding(.bottom, AppleDesignSemanticTokens.Spacing.screenBottomPadding)
       }
       .background {
         LiquidGlassLibraryBackground()
       }
-      .navigationTitle("검색")
-      .navigationBarTitleDisplayMode(.inline)
+      .hideNavigationBarForCustomHeader()
       .sheet(item: $selectedTopic) { topic in
         AppleDesignTopicDetailSheet(topic: topic, favoritesStore: favoritesStore)
       }
@@ -1043,27 +1295,26 @@ private struct FavoritesScreen: View {
 
   var body: some View {
     CompatibleNavigationContainer {
-      Group {
-        if favoriteTopics.isEmpty {
-          VStack(spacing: 10) {
-            Image(systemName: "star")
-              .font(.largeTitle)
-              .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
-            Text("저장한 라이브러리 항목이 없습니다")
-              .font(.headline)
-            Text("라이브러리에서 별 버튼으로 topic을 저장해 보세요")
-              .font(.body)
-              .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
-          }
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .padding(.horizontal, 16)
-          .liquidGlassPanel(cornerRadius: 28)
-          .background {
-            LiquidGlassLibraryBackground()
-          }
-        } else {
-          ScrollView(showsIndicators: false) {
-            VStack(spacing: 12) {
+      ScrollView(showsIndicators: false) {
+        VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.sectionGap) {
+          AppleScreenHeader(title: "즐겨찾기")
+
+          if favoriteTopics.isEmpty {
+            VStack(spacing: AppleDesignSemanticTokens.Spacing.compactGap) {
+              Image(systemName: "star")
+                .font(.largeTitle)
+                .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
+              Text("저장한 라이브러리 항목이 없습니다")
+                .font(.headline)
+              Text("라이브러리에서 별 버튼으로 topic을 저장해 보세요")
+                .font(.body)
+                .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 220)
+            .liquidGlassPanel(cornerRadius: 28, padding: AppleDesignSemanticTokens.Spacing.panelPadding)
+          } else {
+            LazyVStack(spacing: AppleDesignSemanticTokens.Spacing.cardGap) {
               ForEach(favoriteTopics) { topic in
                 AppleDesignTopicCard(
                   topic: topic,
@@ -1073,17 +1324,18 @@ private struct FavoritesScreen: View {
                 )
               }
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 20)
-          }
-          .background {
-            LiquidGlassLibraryBackground()
+            .frame(maxWidth: .infinity, alignment: .leading)
           }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, AppleDesignSemanticTokens.Spacing.pageInset)
+        .padding(.top, AppleDesignSemanticTokens.Spacing.screenTopPadding)
+        .padding(.bottom, AppleDesignSemanticTokens.Spacing.screenBottomPadding)
       }
-      .navigationTitle("즐겨찾기")
-      .navigationBarTitleDisplayMode(.large)
+      .background {
+        LiquidGlassLibraryBackground()
+      }
+      .hideNavigationBarForCustomHeader()
       .sheet(item: $selectedTopic) { topic in
         AppleDesignTopicDetailSheet(topic: topic, favoritesStore: favoritesStore)
       }
@@ -1097,17 +1349,20 @@ private struct SettingsScreen: View {
   var body: some View {
     CompatibleNavigationContainer {
       ScrollView(showsIndicators: false) {
-        VStack(alignment: .leading, spacing: 16) {
-          VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.sectionGap) {
+          AppleScreenHeader(title: "설정")
+
+          VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.compactGap) {
             Text("레이아웃")
               .font(.title3)
               .accessibilityAddTraits(.isHeader)
 
             Toggle("레이아웃 그리드 표시", isOn: $gridOverlayStore.isVisible)
           }
-          .liquidGlassPanel()
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .liquidGlassPanel(padding: AppleDesignSemanticTokens.Spacing.panelPadding)
 
-          VStack(alignment: .leading, spacing: 12) {
+          VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.compactGap) {
             Text("라이브러리 정보")
               .font(.title3)
               .accessibilityAddTraits(.isHeader)
@@ -1116,9 +1371,10 @@ private struct SettingsScreen: View {
               .font(.body)
               .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
           }
-          .liquidGlassPanel()
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .liquidGlassPanel(padding: AppleDesignSemanticTokens.Spacing.panelPadding)
 
-          VStack(alignment: .leading, spacing: 12) {
+          VStack(alignment: .leading, spacing: AppleDesignSemanticTokens.Spacing.compactGap) {
             Text("현재 스타일")
               .font(.title3)
               .accessibilityAddTraits(.isHeader)
@@ -1127,17 +1383,18 @@ private struct SettingsScreen: View {
               .font(.body)
               .foregroundStyle(AppleDesignSemanticTokens.Colors.secondaryText)
           }
-          .liquidGlassPanel()
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .liquidGlassPanel(padding: AppleDesignSemanticTokens.Spacing.panelPadding)
         }
-        .padding(.horizontal, 16)
-        .padding(.top, 16)
-        .padding(.bottom, 28)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, AppleDesignSemanticTokens.Spacing.pageInset)
+        .padding(.top, AppleDesignSemanticTokens.Spacing.screenTopPadding)
+        .padding(.bottom, AppleDesignSemanticTokens.Spacing.screenBottomPadding)
       }
       .background {
         LiquidGlassLibraryBackground()
       }
-      .navigationTitle("설정")
-      .navigationBarTitleDisplayMode(.large)
+      .hideNavigationBarForCustomHeader()
     }
   }
 }

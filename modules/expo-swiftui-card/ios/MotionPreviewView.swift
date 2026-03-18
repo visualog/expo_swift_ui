@@ -9,6 +9,9 @@ private enum AppleDesignPreviewTokens {
   static let fill = Color(uiColor: .systemFill)
   static let secondaryFill = Color(uiColor: .secondarySystemFill)
   static let separator = Color(uiColor: .separator)
+  static let sectionGap: CGFloat = 12
+  static let shellPadding: CGFloat = 16
+  static let shellHeight: CGFloat = 320
 }
 
 struct MotionPreviewView: View {
@@ -32,14 +35,14 @@ struct MotionPreviewView: View {
   @State private var draftText = "designer@apple.com"
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 12) {
+    VStack(alignment: .leading, spacing: AppleDesignPreviewTokens.sectionGap) {
       ZStack {
         previewShell
         previewScene
-          .padding(18)
+          .padding(AppleDesignPreviewTokens.shellPadding)
           .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
-      .frame(height: 320)
+      .frame(height: AppleDesignPreviewTokens.shellHeight)
 
       Text(interactionHint)
         .font(.caption)

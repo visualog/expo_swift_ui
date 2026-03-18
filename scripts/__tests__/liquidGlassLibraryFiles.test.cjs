@@ -72,6 +72,19 @@ test('library shell uses semantic background and text tokens instead of raw colo
   assert.match(source, /font\(\.footnote\)/);
 });
 
+test('library shell defines shared layout spacing tokens for grid alignment across screens', () => {
+  const source = fs.readFileSync(homeViewPath, 'utf8');
+
+  assert.match(source, /static let pageInset:\s*CGFloat = 16/);
+  assert.match(source, /static let sectionGap:\s*CGFloat = 16/);
+  assert.match(source, /static let cardGap:\s*CGFloat = 12/);
+  assert.match(source, /static let panelPadding:\s*CGFloat = 16/);
+  assert.match(source, /static let heroPadding:\s*CGFloat = 16/);
+  assert.match(source, /static let heroBottomPadding:\s*CGFloat = 24/);
+  assert.match(source, /static let detailSectionGap:\s*CGFloat = 16/);
+  assert.match(source, /static let compactGap:\s*CGFloat = 12/);
+});
+
 test('home cards stay compact and detail sections defer longer guidance behind disclosure groups', () => {
   const source = fs.readFileSync(homeViewPath, 'utf8');
   const cardSectionMatch = source.match(/private struct AppleDesignTopicCard: View \{[\s\S]*?private struct AppleDesignTopicDetailSheet: View/);
@@ -96,9 +109,11 @@ test('home clarifies HIG reference identity and cards use usage-context metadata
   const homeSection = homeSectionMatch ? homeSectionMatch[0] : '';
   const topicSource = fs.readFileSync('/Users/im_018/Documents/GitHub/Project/SMP/smp-ios-mvp/modules/expo-swiftui-card/ios/MotionPreset.swift', 'utf8');
 
-  assert.match(homeSection, /\.navigationTitle\("Apple HIG 레퍼런스"\)/);
+  assert.match(source, /private struct AppleScreenHeader: View/);
+  assert.match(homeSection, /AppleScreenHeader\(title:\s*"Apple HIG 레퍼런스"\)/);
+  assert.match(homeSection, /\.hideNavigationBarForCustomHeader\(\)/);
   assert.doesNotMatch(homeSection, /실제 화면 맥락으로 훑는 레퍼런스/);
-  assert.match(homeSection, /selectedLibraryKind == \.patterns \? "실제 화면 패턴" : "실제 UI 구성요소"/);
+  assert.match(homeSection, /selectedLibraryKind == \.patterns \? "실제 화면 패턴" : "공식 구성요소 그룹"/);
   assert.match(cardSection, /Text\(topic\.usageContext\)/);
   assert.doesNotMatch(cardSection, /Text\(topic\.sectionTitle\)/);
   assert.doesNotMatch(cardSection, /Text\(topic\.name\)/);
@@ -137,7 +152,7 @@ test('home and search results use a single-column list layout instead of a two-c
 
   assert.doesNotMatch(source, /private let columns = \[GridItem\(\.flexible\(\), spacing: 12\), GridItem\(\.flexible\(\), spacing: 12\)\]/);
   assert.doesNotMatch(source, /LazyVGrid\(columns: columns, spacing: 12\)/);
-  assert.match(source, /LazyVStack\(spacing: 12\)/);
+  assert.match(source, /LazyVStack\(spacing:\s*AppleDesignSemanticTokens\.Spacing\.cardGap\)/);
 });
 
 test('home cards enlarge tappable affordances and promote secondary metadata for faster scanning', () => {
@@ -158,6 +173,160 @@ test('search screen removes the duplicated intro hero and relies on navigation t
 
   assert.doesNotMatch(searchSection, /Text\("전체 HIG 항목 검색"\)/);
   assert.doesNotMatch(searchSection, /\.liquidGlassPanel\(cornerRadius:\s*20,\s*padding:\s*14\)/);
-  assert.match(searchSection, /\.navigationTitle\("검색"\)/);
+  assert.match(searchSection, /AppleScreenHeader\(title:\s*"검색"\)/);
+  assert.match(searchSection, /\.hideNavigationBarForCustomHeader\(\)/);
   assert.match(searchSection, /\.searchable\(text:\s*\$searchQuery,\s*prompt:\s*"패턴 또는 구성요소 검색"\)/);
+});
+
+test('all top-level screens reuse the shared horizontal rhythm and section spacing tokens', () => {
+  const source = fs.readFileSync(homeViewPath, 'utf8');
+  const homeMatch = source.match(/private struct AppleDesignLibraryHomeScreen: View \{[\s\S]*?private struct SearchScreen: View/);
+  const homeSection = homeMatch ? homeMatch[0] : '';
+  const searchMatch = source.match(/private struct SearchScreen: View \{[\s\S]*?private struct FavoritesScreen: View/);
+  const searchSection = searchMatch ? searchMatch[0] : '';
+  const favoritesMatch = source.match(/private struct FavoritesScreen: View \{[\s\S]*?private struct SettingsScreen: View/);
+  const favoritesSection = favoritesMatch ? favoritesMatch[0] : '';
+  const settingsMatch = source.match(/private struct SettingsScreen: View \{[\s\S]*?private struct AppleDesignLibraryRootTabView: View/);
+  const settingsSection = settingsMatch ? settingsMatch[0] : '';
+
+  assert.match(homeSection, /VStack\(alignment:\s*\.leading,\s*spacing:\s*AppleDesignSemanticTokens\.Spacing\.sectionGap\)/);
+  assert.match(homeSection, /AppleScreenHeader\(title:\s*"Apple HIG 레퍼런스"\)/);
+  assert.match(homeSection, /\.frame\(maxWidth:\s*\.infinity,\s*alignment:\s*\.leading\)\s*\.padding\(\.horizontal,\s*AppleDesignSemanticTokens\.Spacing\.pageInset\)/);
+  assert.match(homeSection, /LazyVStack\(spacing:\s*AppleDesignSemanticTokens\.Spacing\.cardGap\)/);
+  assert.match(searchSection, /VStack\(alignment:\s*\.leading,\s*spacing:\s*AppleDesignSemanticTokens\.Spacing\.sectionGap\)/);
+  assert.match(searchSection, /AppleScreenHeader\(title:\s*"검색"\)/);
+  assert.match(searchSection, /\.frame\(maxWidth:\s*\.infinity,\s*alignment:\s*\.leading\)\s*\.padding\(\.horizontal,\s*AppleDesignSemanticTokens\.Spacing\.pageInset\)/);
+  assert.match(searchSection, /LazyVStack\(spacing:\s*AppleDesignSemanticTokens\.Spacing\.cardGap\)/);
+  assert.match(favoritesSection, /VStack\(spacing:\s*AppleDesignSemanticTokens\.Spacing\.cardGap\)/);
+  assert.match(favoritesSection, /AppleScreenHeader\(title:\s*"즐겨찾기"\)/);
+  assert.match(favoritesSection, /\.frame\(maxWidth:\s*\.infinity,\s*alignment:\s*\.leading\)\s*\.padding\(\.horizontal,\s*AppleDesignSemanticTokens\.Spacing\.pageInset\)/);
+  assert.match(settingsSection, /VStack\(alignment:\s*\.leading,\s*spacing:\s*AppleDesignSemanticTokens\.Spacing\.sectionGap\)/);
+  assert.match(settingsSection, /AppleScreenHeader\(title:\s*"설정"\)/);
+  assert.match(settingsSection, /\.frame\(maxWidth:\s*\.infinity,\s*alignment:\s*\.leading\)\s*\.padding\(\.horizontal,\s*AppleDesignSemanticTokens\.Spacing\.pageInset\)/);
+});
+
+test('cards, thumbnails, and detail panels reuse shared padding values instead of mixed literals', () => {
+  const source = fs.readFileSync(homeViewPath, 'utf8');
+  const cardMatch = source.match(/private struct AppleDesignTopicCard: View \{[\s\S]*?private struct AppleDesignTopicDetailSheet: View/);
+  const cardSection = cardMatch ? cardMatch[0] : '';
+  const detailMatch = source.match(/private struct AppleDesignTopicDetailSheet: View \{[\s\S]*?private struct AppleDesignLibraryHomeScreen: View/);
+  const detailSection = detailMatch ? detailMatch[0] : '';
+  const thumbnailMatch = source.match(/private struct AppleDesignTopicThumbnail: View \{[\s\S]*?private struct AppleDesignTopicCard: View/);
+  const thumbnailSection = thumbnailMatch ? thumbnailMatch[0] : '';
+
+  assert.match(cardSection, /\.padding\(AppleDesignSemanticTokens\.Spacing\.panelPadding\)/);
+  assert.match(cardSection, /HStack\(alignment:\s*\.top,\s*spacing:\s*AppleDesignSemanticTokens\.Spacing\.compactGap\)/);
+  assert.match(thumbnailSection, /\.padding\(\.horizontal,\s*AppleDesignSemanticTokens\.Spacing\.heroPadding\)/);
+  assert.match(thumbnailSection, /\.padding\(\.top,\s*AppleDesignSemanticTokens\.Spacing\.heroPadding\)/);
+  assert.match(thumbnailSection, /\.padding\(\.bottom,\s*AppleDesignSemanticTokens\.Spacing\.heroBottomPadding\)/);
+  assert.match(detailSection, /VStack\(alignment:\s*\.leading,\s*spacing:\s*AppleDesignSemanticTokens\.Spacing\.detailSectionGap\)/);
+  assert.match(detailSection, /AppleScreenHeader\(title:\s*topic\.koreanTitle\)/);
+  assert.match(detailSection, /\.frame\(maxWidth:\s*\.infinity,\s*alignment:\s*\.leading\)\s*\.padding\(\.horizontal,\s*AppleDesignSemanticTokens\.Spacing\.pageInset\)/);
+  assert.match(detailSection, /\.padding\(\.horizontal,\s*AppleDesignSemanticTokens\.Spacing\.pageInset\)/);
+  assert.match(detailSection, /\.frame\(maxWidth:\s*\.infinity,\s*alignment:\s*\.leading\)\s*\.liquidGlassPanel\(tint:\s*Color\(hex:\s*topic\.tintHex\),\s*padding:\s*AppleDesignSemanticTokens\.Spacing\.panelPadding\)/);
+  assert.match(detailSection, /\.liquidGlassPanel\(tint:\s*Color\(hex:\s*topic\.tintHex\),\s*padding:\s*AppleDesignSemanticTokens\.Spacing\.panelPadding\)/);
+});
+
+test('custom screen headers and full-width panels keep titles and cards inside the page margin grid', () => {
+  const source = fs.readFileSync(homeViewPath, 'utf8');
+  const favoritesMatch = source.match(/private struct FavoritesScreen: View \{[\s\S]*?private struct SettingsScreen: View/);
+  const favoritesSection = favoritesMatch ? favoritesMatch[0] : '';
+  const settingsMatch = source.match(/private struct SettingsScreen: View \{[\s\S]*?private struct AppleDesignLibraryRootTabView: View/);
+  const settingsSection = settingsMatch ? settingsMatch[0] : '';
+  const detailMatch = source.match(/private struct AppleDesignTopicDetailSheet: View \{[\s\S]*?private struct AppleDesignLibraryHomeScreen: View/);
+  const detailSection = detailMatch ? detailMatch[0] : '';
+
+  assert.match(source, /private struct AppleScreenHeader: View/);
+  assert.match(source, /\.font\(\.largeTitle\.weight\(\.bold\)\)/);
+  assert.match(source, /\.frame\(maxWidth:\s*\.infinity,\s*alignment:\s*\.leading\)/);
+  assert.match(favoritesSection, /\.frame\(minHeight:\s*220\)/);
+  assert.match(settingsSection, /\.frame\(maxWidth:\s*\.infinity,\s*alignment:\s*\.leading\)\s*\.liquidGlassPanel\(padding:\s*AppleDesignSemanticTokens\.Spacing\.panelPadding\)/);
+  assert.match(detailSection, /\.hideNavigationBarForCustomHeader\(\)/);
+});
+
+test('section headers, segmented control, and list stacks explicitly fill the width inside the page margins', () => {
+  const source = fs.readFileSync(homeViewPath, 'utf8');
+  const cardSectionMatch = source.match(/private struct AppleDesignTopicCard: View \{[\s\S]*?private struct AppleComponentGroupCard: View/);
+  const cardSection = cardSectionMatch ? cardSectionMatch[0] : '';
+  const homeMatch = source.match(/private struct AppleDesignLibraryHomeScreen: View \{[\s\S]*?private struct SearchScreen: View/);
+  const homeSection = homeMatch ? homeMatch[0] : '';
+  const groupMatch = source.match(/private struct AppleComponentGroupScreen: View \{[\s\S]*?private struct AppleDesignTopicDetailSheet: View/);
+  const groupSection = groupMatch ? groupMatch[0] : '';
+  const searchMatch = source.match(/private struct SearchScreen: View \{[\s\S]*?private struct FavoritesScreen: View/);
+  const searchSection = searchMatch ? searchMatch[0] : '';
+
+  assert.match(cardSection, /\.padding\(AppleDesignSemanticTokens\.Spacing\.panelPadding\)\s*\.frame\(maxWidth:\s*\.infinity,\s*alignment:\s*\.leading\)/);
+  assert.match(homeSection, /\.pickerStyle\(\.segmented\)\s*\.frame\(maxWidth:\s*\.infinity\)/);
+  assert.match(homeSection, /HStack \{[\s\S]*?Text\(selectedLibraryKind == \.patterns \? "실제 화면 패턴" : "공식 구성요소 그룹"\)[\s\S]*?\}\s*\.frame\(maxWidth:\s*\.infinity,\s*alignment:\s*\.leading\)/);
+  assert.match(homeSection, /LazyVStack\(spacing:\s*AppleDesignSemanticTokens\.Spacing\.cardGap\)[\s\S]*?\.frame\(maxWidth:\s*\.infinity,\s*alignment:\s*\.leading\)/);
+  assert.match(groupSection, /HStack \{[\s\S]*?Text\("공식 구성요소 항목"\)[\s\S]*?\}\s*\.frame\(maxWidth:\s*\.infinity,\s*alignment:\s*\.leading\)/);
+  assert.match(searchSection, /HStack \{[\s\S]*?Text\(normalizedQuery\.isEmpty \? "전체 항목" : "검색 결과"\)[\s\S]*?\}\s*\.frame\(maxWidth:\s*\.infinity,\s*alignment:\s*\.leading\)/);
+});
+
+test('library home mirrors HIG hierarchy with pattern leaves and component groups', () => {
+  const source = fs.readFileSync(homeViewPath, 'utf8');
+
+  assert.match(source, /private struct AppleComponentGroupCard: View/);
+  assert.match(source, /private struct AppleComponentGroupScreen: View/);
+  assert.match(source, /AppleComponentGroup\.allCases/);
+  assert.match(source, /Text\(selectedLibraryKind == \.patterns \? "실제 화면 패턴" : "공식 구성요소 그룹"\)/);
+  assert.match(source, /if selectedLibraryKind == \.patterns/);
+  assert.match(source, /ForEach\(filteredTopics\)/);
+  assert.match(source, /ForEach\(AppleComponentGroup\.allCases\)/);
+  assert.match(source, /NavigationLink\(destination:\s*AppleComponentGroupScreen/);
+});
+
+test('planned hierarchy items are exposed with a 준비 중 state instead of being hidden', () => {
+  const source = fs.readFileSync(homeViewPath, 'utf8');
+
+  assert.match(source, /Text\("준비 중"\)/);
+  assert.match(source, /topic\.status == \.planned/);
+  assert.match(source, /groupTopics\.filter/);
+});
+
+test('planned topics use a detail fallback instead of always requiring a live preview', () => {
+  const source = fs.readFileSync(homeViewPath, 'utf8');
+  const detailMatch = source.match(/private struct AppleDesignTopicDetailSheet: View \{[\s\S]*?private struct AppleDesignLibraryHomeScreen: View/);
+  const detailSection = detailMatch ? detailMatch[0] : '';
+
+  assert.match(detailSection, /if topic\.status == \.implemented/);
+  assert.match(detailSection, /MotionPreviewView\(topic: topic\)/);
+  assert.match(detailSection, /Text\("준비 중인 레퍼런스"\)/);
+  assert.match(detailSection, /Text\("이 HIG 항목은 구조만 먼저 미러링되어 있고, 인터랙티브 샘플은 아직 준비 중입니다\."\)/);
+});
+
+test('search surfaces both topic leaves and official component groups while favorites stay topic-only', () => {
+  const source = fs.readFileSync(homeViewPath, 'utf8');
+  const searchMatch = source.match(/private struct SearchScreen: View \{[\s\S]*?private struct FavoritesScreen: View/);
+  const searchSection = searchMatch ? searchMatch[0] : '';
+  const favoritesMatch = source.match(/private struct FavoritesScreen: View \{[\s\S]*?private struct SettingsScreen: View/);
+  const favoritesSection = favoritesMatch ? favoritesMatch[0] : '';
+
+  assert.match(searchSection, /private var filteredGroups:/);
+  assert.match(searchSection, /AppleComponentGroup\.allCases\.filter/);
+  assert.match(searchSection, /NavigationLink\(destination:\s*AppleComponentGroupScreen/);
+  assert.match(searchSection, /ForEach\(filteredGroups\)/);
+  assert.match(searchSection, /ForEach\(filteredTopics\)/);
+  assert.doesNotMatch(favoritesSection, /AppleComponentGroupCard/);
+  assert.doesNotMatch(favoritesSection, /ForEach\(filteredGroups\)/);
+});
+
+test('planned items are visually clearer in group and search flows through explicit status copy and counts', () => {
+  const source = fs.readFileSync(homeViewPath, 'utf8');
+  const groupCardMatch = source.match(/private struct AppleComponentGroupCard: View \{[\s\S]*?private struct AppleComponentGroupScreen: View/);
+  const groupCardSection = groupCardMatch ? groupCardMatch[0] : '';
+  const cardMatch = source.match(/private struct AppleDesignTopicCard: View \{[\s\S]*?private struct AppleComponentGroupCard: View/);
+  const cardSection = cardMatch ? cardMatch[0] : '';
+  const groupScreenMatch = source.match(/private struct AppleComponentGroupScreen: View \{[\s\S]*?private struct AppleDesignTopicDetailSheet: View/);
+  const groupScreenSection = groupScreenMatch ? groupScreenMatch[0] : '';
+  const searchMatch = source.match(/private struct SearchScreen: View \{[\s\S]*?private struct FavoritesScreen: View/);
+  const searchSection = searchMatch ? searchMatch[0] : '';
+
+  assert.match(groupCardSection, /private var plannedCount: Int/);
+  assert.match(groupCardSection, /Text\("\\\(topics\.count\)개 항목 · \\\(implementedCount\)개 구현 · \\\(plannedCount\)개 준비 중"\)/);
+  assert.match(cardSection, /Text\(topic\.status == \.implemented \? "구현됨" : "준비 중"\)/);
+  assert.match(cardSection, /topic\.status == \.planned \? Color\(hex: topic\.tintHex\) : AppleDesignSemanticTokens\.Colors\.secondaryText/);
+  assert.match(groupScreenSection, /Text\(plannedTopics\.isEmpty \? "\\\(groupTopics\.count\)개" : "\\\(groupTopics\.count\)개 · \\\(plannedTopics\.count\) 준비 중"\)/);
+  assert.match(searchSection, /Text\("구성요소 그룹"\)/);
+  assert.match(searchSection, /Text\("HIG 항목"\)/);
 });
