@@ -351,7 +351,13 @@ private struct AppleDesignTopicThumbnail: View {
         endPoint: .bottomTrailing
       )
 
-      thumbnailContent
+      Group {
+        if topic.status == .planned {
+          plannedThumbnail
+        } else {
+          contextualThumbnailContent
+        }
+      }
         .padding(.horizontal, AppleDesignSemanticTokens.Spacing.heroPadding)
         .padding(.top, AppleDesignSemanticTokens.Spacing.heroPadding)
         .padding(.bottom, AppleDesignSemanticTokens.Spacing.heroBottomPadding)
@@ -377,7 +383,7 @@ private struct AppleDesignTopicThumbnail: View {
   }
 
   @ViewBuilder
-  private var thumbnailContent: some View {
+  private var contextualThumbnailContent: some View {
     switch topic.previewKind {
     case .launch:
       launchThumbnail
@@ -401,6 +407,60 @@ private struct AppleDesignTopicThumbnail: View {
       collectionThumbnail
     default:
       iconThumbnail
+    }
+  }
+
+  private var plannedThumbnail: some View {
+    VStack(alignment: .leading, spacing: 12) {
+      Text("준비 중")
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(tint)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(tint.opacity(0.14), in: Capsule())
+
+      Spacer(minLength: 0)
+
+      HStack(alignment: .center, spacing: 12) {
+        RoundedRectangle(cornerRadius: 18, style: .continuous)
+          .fill(AppleDesignSemanticTokens.Colors.backgroundSecondary.opacity(0.88))
+          .frame(width: 60, height: 60)
+          .overlay {
+            Image(systemName: topic.icon)
+              .font(.system(size: 22, weight: .semibold))
+              .foregroundStyle(tint)
+          }
+
+        VStack(alignment: .leading, spacing: 10) {
+          RoundedRectangle(cornerRadius: 6, style: .continuous)
+            .fill(tint.opacity(0.22))
+            .frame(width: 72, height: 10)
+
+          RoundedRectangle(cornerRadius: 6, style: .continuous)
+            .fill(AppleDesignSemanticTokens.Colors.secondaryFill)
+            .frame(maxWidth: .infinity)
+            .frame(height: 10)
+
+          RoundedRectangle(cornerRadius: 6, style: .continuous)
+            .fill(AppleDesignSemanticTokens.Colors.secondaryFill.opacity(0.82))
+            .frame(maxWidth: .infinity)
+            .frame(height: 10)
+        }
+      }
+      .padding(AppleDesignSemanticTokens.Spacing.compactGap)
+      .background(
+        AppleDesignSemanticTokens.Colors.backgroundSecondary.opacity(0.92),
+        in: RoundedRectangle(cornerRadius: 20, style: .continuous)
+      )
+
+      HStack(spacing: 8) {
+        ForEach(0..<3, id: \.self) { index in
+          RoundedRectangle(cornerRadius: 5, style: .continuous)
+            .fill(index == 0 ? tint.opacity(0.26) : AppleDesignSemanticTokens.Colors.secondaryFill.opacity(0.9))
+            .frame(maxWidth: .infinity)
+            .frame(height: 8)
+        }
+      }
     }
   }
 

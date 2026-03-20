@@ -330,3 +330,13 @@ test('planned items are visually clearer in group and search flows through expli
   assert.match(searchSection, /Text\("구성요소 그룹"\)/);
   assert.match(searchSection, /Text\("HIG 항목"\)/);
 });
+
+test('planned topic heroes use a dedicated placeholder thumbnail instead of contextual preview scenes', () => {
+  const source = fs.readFileSync(homeViewPath, 'utf8');
+  const thumbnailMatch = source.match(/private struct AppleDesignTopicThumbnail: View \{[\s\S]*?private struct AppleDesignTopicCard: View/);
+  const thumbnailSection = thumbnailMatch ? thumbnailMatch[0] : '';
+
+  assert.match(thumbnailSection, /if topic\.status == \.planned/);
+  assert.match(thumbnailSection, /plannedThumbnail/);
+  assert.match(thumbnailSection, /Text\("준비 중"\)/);
+});
